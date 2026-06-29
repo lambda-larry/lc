@@ -6,20 +6,20 @@
 ///
 /// @lc_toc_begin
 /// - Preprocessor ..................................................8. [LC_XPP]
-/// - Feature detection ...........................................307. [LC_XFD]
+/// - Feature detection ...........................................313. [LC_XFD]
 /// - Types .......................................................100. [LC_XTY]
 /// - Platform code ................................................14. [LC_XPL]
 /// - Utility macro ................................................95. [LC_XUM]
-/// - Math .........................................................32. [LC_XMT]
+/// - Math .........................................................34. [LC_XMT]
 /// - Relative pointer .............................................48. [LC_XRP]
-/// - Ordering ....................................................132. [LC_XOD]
+/// - Ordering ....................................................143. [LC_XOD]
 /// - Assert .......................................................71. [LC_XAS]
 /// - Slice .......................................................108. [LC_XSC]
 /// - Source location ..............................................40. [LC_XSL]
 /// - Allocator ...................................................449. [LC_XAC]
 /// - ANSI Escape Code .............................................54. [LC_XAE]
-/// - Time ........................................................110. [LC_XCH]
-/// - String view .................................................251. [LC_XSV]
+/// - Time ........................................................129. [LC_XCH]
+/// - String view .................................................272. [LC_XSV]
 /// - Logger ......................................................348. [LC_XLG]
 /// - Context ......................................................28. [LC_XCT]
 /// - Input/Output ................................................274. [LC_XIO]
@@ -31,7 +31,7 @@
 /// - Bit stream ..................................................236. [LC_XBS]
 /// - Endian .......................................................91. [LC_XED]
 /// - Compression ..................................................11. [LC_XCM]
-/// - Base64 .......................................................80. [LC_XBC]
+/// - Base64 .......................................................78. [LC_XBC]
 /// @lc_toc_end
 
 
@@ -280,7 +280,6 @@
 #endif
 #if __has_c_attribute(unsequenced)
 #define LC_UNSEQUENCED [[unsequenced]]
-// #define LC_UNSEQUENCED
 #elif LC_CC_GNU
 #define LC_UNSEQUENCED LC_REPRODUCIBLE
 #else
@@ -314,6 +313,13 @@
 #define LC_UNSEQUENCED_FP
 #endif
 
+#ifdef LC_HAVE_TYPEOF
+#define LC_UNSEQUENCED_FUNC(func)    typeof (func) LC_UNSEQUENCED    func
+#define LC_UNSEQUENCED_FP_FUNC(func) typeof (func) LC_UNSEQUENCED_FP func
+#else
+#define LC_UNSEQUENCED_FUNC(func)    static_assert(1)
+#define LC_UNSEQUENCED_FP_FUNC(func) static_assert(1)
+#endif
 
 #define LC_PRAGMA(...) _Pragma(LC_PP_STR(__VA_ARGS__))
 
@@ -574,22 +580,24 @@ typedef ptrdiff_t ssize;
 #endif
 
 #ifndef LC_STD_CXX
-LC_UNSEQUENCED_FP
 LC_NODISCARD
 static inline f32
 lerp(f32 a, f32 b, f32 t)
 {
 	return a + t * (b - a);
 }
+
+LC_UNSEQUENCED_FP_FUNC(lerp);
 #endif
 
-LC_UNSEQUENCED_FP
 LC_NODISCARD
 static inline f32
 clamp(f32 x, f32 lo, f32 hi)
 {
 	return x < lo ? lo : (hi < x ? hi : x);
 }
+
+LC_UNSEQUENCED_FP_FUNC(clamp);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Relative pointer                                                [LC_XRP] ///
@@ -671,21 +679,36 @@ enum LC_NODISCARD lc_order
 	LC_ORDER_GREATER = +1,
 };
 
-LC_UNSEQUENCED
+static inline enum lc_order lc_order_cmp_size_t(size_t lhs, size_t rhs);
+static inline enum lc_order lc_order_cmp_u32(u32 lhs, u32 rhs);
+static inline enum lc_order lc_order_cmp_i32(i32 lhs, i32 rhs);
+
+static inline enum lc_order lc_order_from_i64(i64 order);
+static inline enum lc_order lc_order_from_i32(i32 order);
+static inline enum lc_order lc_order_from_i32(i32 order);
+static inline enum lc_order lc_order_from_i16(i16 order);
+static inline enum lc_order lc_order_from_i8(i8 order);
+
+LC_UNSEQUENCED_FUNC(lc_order_cmp_size_t);
+LC_UNSEQUENCED_FUNC(lc_order_cmp_u32);
+LC_UNSEQUENCED_FUNC(lc_order_cmp_i32);
+LC_UNSEQUENCED_FUNC(lc_order_from_i64);
+LC_UNSEQUENCED_FUNC(lc_order_from_i32);
+LC_UNSEQUENCED_FUNC(lc_order_from_i16);
+LC_UNSEQUENCED_FUNC(lc_order_from_i8);
+
 static inline enum lc_order
 lc_order_cmp_size_t(size_t lhs, size_t rhs)
 {
 	return (lhs > rhs) - (lhs < rhs);
 }
 
-LC_UNSEQUENCED
 static inline enum lc_order
 lc_order_cmp_u32(u32 lhs, u32 rhs)
 {
 	return (lhs > rhs) - (lhs < rhs);
 }
 
-LC_UNSEQUENCED
 static inline enum lc_order
 lc_order_cmp_i32(i32 lhs, i32 rhs)
 {
@@ -702,7 +725,6 @@ lc_order_cmp_i32(i32 lhs, i32 rhs)
  *          LC_ORDER_EQUAL if \a order is zero,
  *          LC_ORDER_GREATER if \a order is above zero.
  */
-LC_UNSEQUENCED
 static inline enum lc_order
 lc_order_from_i64(i64 order)
 {
@@ -719,7 +741,6 @@ lc_order_from_i64(i64 order)
  *          LC_ORDER_EQUAL if \a order is zero,
  *          LC_ORDER_GREATER if \a order is above zero.
  */
-LC_UNSEQUENCED
 static inline enum lc_order
 lc_order_from_i32(i32 order)
 {
@@ -736,7 +757,6 @@ lc_order_from_i32(i32 order)
  *          LC_ORDER_EQUAL if \a order is zero,
  *          LC_ORDER_GREATER if \a order is above zero.
  */
-LC_UNSEQUENCED
 static inline enum lc_order
 lc_order_from_i16(i16 order)
 {
@@ -753,7 +773,6 @@ lc_order_from_i16(i16 order)
  *          LC_ORDER_EQUAL if \a order is zero,
  *          LC_ORDER_GREATER if \a order is above zero.
  */
-LC_UNSEQUENCED
 static inline enum lc_order
 lc_order_from_i8(i8 order)
 {
@@ -1506,7 +1525,27 @@ static_assert(sizeof(u64[2]) == sizeof(struct lc_clock), "");
 
 #include <time.h>
 
-LC_NODISCARD LC_UNSEQUENCED
+LC_NODISCARD static LC_ALWAYS_INLINE struct lc_clock lc_clock_from_timespec(struct timespec ts);
+LC_NODISCARD static inline struct lc_clock lc_clock_init(void);
+
+LC_NODISCARD LC_CONST static inline f64 lc_clock_get_sec(struct lc_clock clock);
+LC_NODISCARD LC_CONST static inline f64 lc_clock_get_ms(struct lc_clock clock);
+
+static inline f64 lc_clock_reset(struct lc_clock *clock);
+static inline f64 lc_clock_reset_ms(struct lc_clock *clock);
+
+LC_NODISCARD static inline f64 lc_clock_since(struct lc_clock clock);
+LC_NODISCARD static inline f64 lc_clock_since_ms(struct lc_clock clock);
+
+LC_UNSEQUENCED_FUNC(lc_clock_from_timespec);
+
+#ifdef LC_HAVE_ORDER
+LC_NODISCARD static inline enum lc_order lc_clock_cmp(struct lc_clock lhs, struct lc_clock rhs);
+LC_UNSEQUENCED_FUNC(lc_clock_cmp);
+#endif
+
+
+LC_NODISCARD
 static LC_ALWAYS_INLINE struct lc_clock
 lc_clock_from_timespec(struct timespec ts)
 {
@@ -1585,7 +1624,6 @@ lc_clock_since_ms(struct lc_clock clock)
 
 #ifdef LC_HAVE_ORDER
 
-LC_UNSEQUENCED
 LC_NODISCARD static inline enum lc_order
 lc_clock_cmp(struct lc_clock lhs, struct lc_clock rhs)
 {
@@ -1621,6 +1659,34 @@ struct lc_sv {
 #define LC_PRI_SV ".*s"
 #define LC_PRI_SV_ARGS(sv) (int)(sv).length, (sv).s
 
+LC_NODISCARD LC_CONST static LC_ALWAYS_INLINE size_t lc_sv_len(struct lc_sv sv);
+LC_NODISCARD LC_CONST static LC_ALWAYS_INLINE bool lc_sv_is_empty(struct lc_sv sv);
+LC_NODISCARD LC_CONST static LC_ALWAYS_INLINE const char * lc_sv_begin(struct lc_sv sv);
+LC_NODISCARD LC_CONST static LC_ALWAYS_INLINE const char * lc_sv_end(struct lc_sv sv);
+LC_NODISCARD static inline bool lc_sv_is_equal(struct lc_sv lhs, struct lc_sv rhs);
+LC_NODISCARD static inline bool lc_sv_is_prefix(struct lc_sv sv, struct lc_sv prefix);
+LC_NODISCARD static inline bool lc_sv_is_suffix(struct lc_sv sv, struct lc_sv suffix);
+LC_NODISCARD static inline struct lc_sv lc_sv_find(struct lc_sv sv, struct lc_sv substring);
+LC_NODISCARD static inline bool lc_sv_is_substring(struct lc_sv sv, struct lc_sv substring);
+LC_NODISCARD static inline struct lc_sv lc_sv_sub(struct lc_sv sv, size_t len, size_t idx);
+
+static inline bool lc_sv_split(struct lc_sv *restrict iter, struct lc_sv delim, struct lc_sv *restrict value);
+static inline bool lc_sv_split_c(struct lc_sv *restrict iter, char c, struct lc_sv *restrict value);
+
+
+LC_UNSEQUENCED_FUNC(lc_sv_is_equal);
+LC_UNSEQUENCED_FUNC(lc_sv_is_suffix);
+LC_UNSEQUENCED_FUNC(lc_sv_find);
+LC_UNSEQUENCED_FUNC(lc_sv_is_substring);
+LC_UNSEQUENCED_FUNC(lc_sv_sub);
+LC_UNSEQUENCED_FUNC(lc_sv_is_prefix);
+
+
+#ifdef LC_HAVE_ORDER
+LC_NODISCARD static inline enum lc_order lc_sv_cmp(struct lc_sv lhs, struct lc_sv rhs);
+LC_UNSEQUENCED_FUNC(lc_sv_cmp);
+#endif
+
 LC_NODISCARD LC_CONST static LC_ALWAYS_INLINE size_t
 lc_sv_len(struct lc_sv sv)
 {
@@ -1648,21 +1714,18 @@ lc_sv_end(struct lc_sv sv)
 	return NULL;
 }
 
-LC_UNSEQUENCED
 LC_NODISCARD static inline bool
 lc_sv_is_equal(struct lc_sv lhs, struct lc_sv rhs)
 {
 	return lhs.length == rhs.length && 0 == memcmp(lhs.s, rhs.s, lhs.length);
 }
 
-LC_UNSEQUENCED
 LC_NODISCARD static inline bool
 lc_sv_is_prefix(struct lc_sv sv, struct lc_sv prefix)
 {
 	return prefix.length <= sv.length && 0 == memcmp(sv.s, prefix.s, prefix.length);
 }
 
-LC_UNSEQUENCED
 LC_NODISCARD static inline bool
 lc_sv_is_suffix(struct lc_sv sv, struct lc_sv suffix)
 {
@@ -1670,7 +1733,6 @@ lc_sv_is_suffix(struct lc_sv sv, struct lc_sv suffix)
 	    && 0 == memcmp(sv.s + sv.length - suffix.length, suffix.s, suffix.length);
 }
 
-LC_UNSEQUENCED
 LC_NODISCARD static inline struct lc_sv
 lc_sv_find(struct lc_sv sv, struct lc_sv substring)
 {
@@ -1703,7 +1765,6 @@ next:;
 	return sv(0);
 }
 
-LC_UNSEQUENCED
 LC_NODISCARD static inline bool
 lc_sv_is_substring(struct lc_sv sv, struct lc_sv substring)
 {
@@ -1712,7 +1773,6 @@ lc_sv_is_substring(struct lc_sv sv, struct lc_sv substring)
 
 #ifdef LC_HAVE_ORDER
 
-LC_UNSEQUENCED
 LC_NODISCARD static inline enum lc_order
 lc_sv_cmp(struct lc_sv lhs, struct lc_sv rhs)
 {
@@ -1721,7 +1781,6 @@ lc_sv_cmp(struct lc_sv lhs, struct lc_sv rhs)
 }
 #endif
 
-LC_UNSEQUENCED
 LC_NODISCARD static inline struct lc_sv
 lc_sv_sub(struct lc_sv sv, size_t len, size_t idx)
 {
@@ -4398,8 +4457,6 @@ lc_base64_decode(size_t n, const char in[restrict n], size_t m, u8 out[restrict 
 
 	return out_p - out;
 }
-
-
 
 #ifdef LC_STD_CXX
 };
