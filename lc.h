@@ -25,7 +25,7 @@
 /// - Input/Output ................................................274. [LC_XIO]
 /// - Input/Output implementation ................................1068. [LC_XIH]
 /// - Vector .......................................................77. [LC_XVC]
-/// - Strings .....................................................135. [LC_XSS]
+/// - Strings .....................................................120. [LC_XSS]
 /// - Path ........................................................188. [LC_XPH]
 /// - Dynamic library ..............................................34. [LC_XDL]
 /// - Bit stream ..................................................236. [LC_XBS]
@@ -3668,21 +3668,6 @@ lc_string_end(struct lc_string str)
 }
 
 #include <string.h>
-
-static inline struct lc_string lc_string_to_ada_case(struct lc_sv sv);
-static inline struct lc_string lc_string_to_flat_case(struct lc_sv sv);
-
-static inline struct lc_string lc_string_to_snake_case(struct lc_sv sv);
-
-static inline struct lc_string lc_string_to_kebab_case(struct lc_sv sv);
-
-static inline struct lc_string lc_string_to_shout_case(struct lc_sv sv);
-
-static inline struct lc_string lc_string_to_camel_case(struct lc_sv sv);
-
-static inline struct lc_string lc_string_to_train_case(struct lc_sv sv);
-
-static inline struct lc_string lc_string_to_pascal_case(struct lc_sv sv);
 
 LC_NODISCARD
 static inline struct lc_string
