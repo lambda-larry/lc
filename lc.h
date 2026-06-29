@@ -7,19 +7,19 @@
 /// @lc_toc_begin
 /// - Preprocessor ..................................................8. [LC_XPP]
 /// - Feature detection ...........................................311. [LC_XFD]
-/// - Types .......................................................103. [LC_XTY]
+/// - Types .......................................................100. [LC_XTY]
 /// - Platform code ................................................14. [LC_XPL]
 /// - Utility macro ................................................95. [LC_XUM]
-/// - Math .........................................................30. [LC_XMT]
+/// - Math .........................................................32. [LC_XMT]
 /// - Relative pointer .............................................48. [LC_XRP]
-/// - Ordering ....................................................125. [LC_XOD]
+/// - Ordering ....................................................132. [LC_XOD]
 /// - Assert .......................................................71. [LC_XAS]
 /// - Slice .......................................................108. [LC_XSC]
 /// - Source location ..............................................40. [LC_XSL]
 /// - Allocator ...................................................449. [LC_XAC]
 /// - ANSI Escape Code .............................................54. [LC_XAE]
-/// - Time ........................................................107. [LC_XCH]
-/// - String view .................................................243. [LC_XSV]
+/// - Time ........................................................109. [LC_XCH]
+/// - String view .................................................251. [LC_XSV]
 /// - Logger ......................................................348. [LC_XLG]
 /// - Context ......................................................28. [LC_XCT]
 /// - Input/Output ................................................274. [LC_XIO]
@@ -578,17 +578,19 @@ typedef ptrdiff_t ssize;
 #endif
 
 #ifndef LC_STD_CXX
+LC_UNSEQUENCED_FP
 LC_NODISCARD
 static inline f32
-lerp(f32 a, f32 b, f32 t) LC_UNSEQUENCED_FP
+lerp(f32 a, f32 b, f32 t)
 {
 	return a + t * (b - a);
 }
 #endif
 
+LC_UNSEQUENCED_FP
 LC_NODISCARD
 static inline f32
-clamp(f32 x, f32 lo, f32 hi) LC_UNSEQUENCED_FP
+clamp(f32 x, f32 lo, f32 hi)
 {
 	return x < lo ? lo : (hi < x ? hi : x);
 }
@@ -673,20 +675,23 @@ enum LC_NODISCARD lc_order
 	LC_ORDER_GREATER = +1,
 };
 
+LC_UNSEQUENCED
 static inline enum lc_order
-lc_order_cmp_size_t(size_t lhs, size_t rhs) LC_UNSEQUENCED
+lc_order_cmp_size_t(size_t lhs, size_t rhs)
 {
 	return (lhs > rhs) - (lhs < rhs);
 }
 
+LC_UNSEQUENCED
 static inline enum lc_order
-lc_order_cmp_u32(u32 lhs, u32 rhs) LC_UNSEQUENCED
+lc_order_cmp_u32(u32 lhs, u32 rhs)
 {
 	return (lhs > rhs) - (lhs < rhs);
 }
 
+LC_UNSEQUENCED
 static inline enum lc_order
-lc_order_cmp_i32(i32 lhs, i32 rhs) LC_UNSEQUENCED
+lc_order_cmp_i32(i32 lhs, i32 rhs)
 {
 	return (lhs > rhs) - (lhs < rhs);
 }
@@ -701,8 +706,9 @@ lc_order_cmp_i32(i32 lhs, i32 rhs) LC_UNSEQUENCED
  *          LC_ORDER_EQUAL if \a order is zero,
  *          LC_ORDER_GREATER if \a order is above zero.
  */
+LC_UNSEQUENCED
 static inline enum lc_order
-lc_order_from_i64(i64 order) LC_UNSEQUENCED
+lc_order_from_i64(i64 order)
 {
 	return (order > 0) - (order < 0);
 }
@@ -717,8 +723,9 @@ lc_order_from_i64(i64 order) LC_UNSEQUENCED
  *          LC_ORDER_EQUAL if \a order is zero,
  *          LC_ORDER_GREATER if \a order is above zero.
  */
+LC_UNSEQUENCED
 static inline enum lc_order
-lc_order_from_i32(i32 order) LC_UNSEQUENCED
+lc_order_from_i32(i32 order)
 {
 	return (order > 0) - (order < 0);
 }
@@ -733,8 +740,9 @@ lc_order_from_i32(i32 order) LC_UNSEQUENCED
  *          LC_ORDER_EQUAL if \a order is zero,
  *          LC_ORDER_GREATER if \a order is above zero.
  */
+LC_UNSEQUENCED
 static inline enum lc_order
-lc_order_from_i16(i16 order) LC_UNSEQUENCED
+lc_order_from_i16(i16 order)
 {
 	return (order > 0) - (order < 0);
 }
@@ -749,8 +757,9 @@ lc_order_from_i16(i16 order) LC_UNSEQUENCED
  *          LC_ORDER_EQUAL if \a order is zero,
  *          LC_ORDER_GREATER if \a order is above zero.
  */
+LC_UNSEQUENCED
 static inline enum lc_order
-lc_order_from_i8(i8 order) LC_UNSEQUENCED
+lc_order_from_i8(i8 order)
 {
 	return (order > 0) - (order < 0);
 }
@@ -1579,8 +1588,10 @@ lc_clock_since_ms(struct lc_clock clock)
 }
 
 #ifdef LC_HAVE_ORDER
+
+LC_UNSEQUENCED
 LC_NODISCARD static inline enum lc_order
-lc_clock_cmp(struct lc_clock lhs, struct lc_clock rhs) LC_UNSEQUENCED
+lc_clock_cmp(struct lc_clock lhs, struct lc_clock rhs)
 {
 	if (lhs.sec < rhs.sec)
 		return LC_ORDER_LESS;
@@ -1640,27 +1651,31 @@ lc_sv_end(struct lc_sv sv)
 	return NULL;
 }
 
+LC_UNSEQUENCED
 LC_NODISCARD static inline bool
-lc_sv_is_equal(struct lc_sv lhs, struct lc_sv rhs) LC_UNSEQUENCED
+lc_sv_is_equal(struct lc_sv lhs, struct lc_sv rhs)
 {
 	return lhs.length == rhs.length && 0 == memcmp(lhs.s, rhs.s, lhs.length);
 }
 
+LC_UNSEQUENCED
 LC_NODISCARD static inline bool
-lc_sv_is_prefix(struct lc_sv sv, struct lc_sv prefix) LC_UNSEQUENCED
+lc_sv_is_prefix(struct lc_sv sv, struct lc_sv prefix)
 {
 	return prefix.length <= sv.length && 0 == memcmp(sv.s, prefix.s, prefix.length);
 }
 
+LC_UNSEQUENCED
 LC_NODISCARD static inline bool
-lc_sv_is_suffix(struct lc_sv sv, struct lc_sv suffix) LC_UNSEQUENCED
+lc_sv_is_suffix(struct lc_sv sv, struct lc_sv suffix)
 {
 	return suffix.length <= sv.length
 	    && 0 == memcmp(sv.s + sv.length - suffix.length, suffix.s, suffix.length);
 }
 
+LC_UNSEQUENCED
 LC_NODISCARD static inline struct lc_sv
-lc_sv_find(struct lc_sv sv, struct lc_sv substring) LC_UNSEQUENCED
+lc_sv_find(struct lc_sv sv, struct lc_sv substring)
 {
 	if (0 == substring.length)
 		return sv;
@@ -1691,23 +1706,27 @@ next:;
 	return sv(0);
 }
 
+LC_UNSEQUENCED
 LC_NODISCARD static inline bool
-lc_sv_is_substring(struct lc_sv sv, struct lc_sv substring) LC_UNSEQUENCED
+lc_sv_is_substring(struct lc_sv sv, struct lc_sv substring)
 {
 	return !lc_sv_is_empty(lc_sv_find(sv, substring));
 }
 
 #ifdef LC_HAVE_ORDER
+
+LC_UNSEQUENCED
 LC_NODISCARD static inline enum lc_order
-lc_sv_cmp(struct lc_sv lhs, struct lc_sv rhs) LC_UNSEQUENCED
+lc_sv_cmp(struct lc_sv lhs, struct lc_sv rhs)
 {
 	const size_t len = MAX(lhs.length, rhs.length);
 	return lc_order_from_int(memcmp(lhs.s, rhs.s, len));
 }
 #endif
 
+LC_UNSEQUENCED
 LC_NODISCARD static inline struct lc_sv
-lc_sv_sub(struct lc_sv sv, size_t len, size_t idx) LC_UNSEQUENCED
+lc_sv_sub(struct lc_sv sv, size_t len, size_t idx)
 {
 	/// Case 4. Length zero
 	///
