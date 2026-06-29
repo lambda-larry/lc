@@ -6,3 +6,5 @@
 *.ko
 *.obj
 *.elf
+
+tags
