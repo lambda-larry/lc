@@ -2195,7 +2195,9 @@ _lc_print_timestamp(size_t n, char buffer[n])
 	struct tm tm          = {0};
 	struct lc_clock clock = lc_clock_init();
 
-	// TODO: Portability with gmtime_r(3)
+	// Included in POSIX and C23
+	extern struct tm *gmtime_r(const time_t *restrict timep, struct tm *restrict result);
+
 	gmtime_r((time_t *)&clock.sec, &tm);
 
 	written += strftime(buffer, n, "[%Y-%m-%d %H:%M:%S", &tm);
