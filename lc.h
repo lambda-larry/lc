@@ -16,16 +16,16 @@
 /// - Assert .......................................................71. [LC_XAS]
 /// - Slice .......................................................108. [LC_XSC]
 /// - Source location ..............................................40. [LC_XSL]
-/// - Allocator ...................................................449. [LC_XAC]
+/// - Allocator ...................................................448. [LC_XAC]
 /// - ANSI Escape Code .............................................54. [LC_XAE]
 /// - Time ........................................................191. [LC_XCH]
 /// - String view .................................................272. [LC_XSV]
-/// - Logger ......................................................348. [LC_XLG]
+/// - Logger ......................................................349. [LC_XLG]
 /// - Context ......................................................28. [LC_XCT]
 /// - Input/Output ................................................274. [LC_XIO]
 /// - Input/Output implementation ................................1068. [LC_XIH]
 /// - Vector .......................................................77. [LC_XVC]
-/// - Strings .....................................................120. [LC_XSS]
+/// - Strings .....................................................118. [LC_XSS]
 /// - Path ........................................................188. [LC_XPH]
 /// - Dynamic library ..............................................34. [LC_XDL]
 /// - Bit stream ..................................................236. [LC_XBS]
@@ -461,13 +461,18 @@ typedef ptrdiff_t ssize;
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifndef lc_memset
-#include <string.h>
+extern void *memset(void *, int, size_t);
 #define lc_memset memset
 #endif
 
 #ifndef lc_memcpy
-#include <string.h>
+extern void *memcpy(void *restrict, const void *restrict, size_t);
 #define lc_memcpy memcpy
+#endif
+
+#ifndef lc_memcmp
+extern int memcmp(const void *restrict, const void *restrict, size_t);
+#define lc_memcmp memcmp
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1014,7 +1019,6 @@ struct lc_source_loc {
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <stdarg.h>
-#include <string.h>
 
 enum lc_allocator_cmd
 {
@@ -1386,7 +1390,7 @@ extern void *_lc_bump_allocator_proc(
 
 
 			ret = &b->data[b->allocated];
-			memcpy(ret, ptr, old_size);
+			lc_memcpy(ret, ptr, old_size);
 
 			b->allocated += new_size;
 
@@ -1707,7 +1711,7 @@ lc_clock_cmp(struct lc_clock lhs, struct lc_clock rhs)
 /// String view                                                     [LC_XSV] ///
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <string.h>
+extern size_t strlen(const char *);
 
 struct lc_sv {
 	size_t length;
@@ -1779,20 +1783,20 @@ lc_sv_end(struct lc_sv sv)
 LC_NODISCARD static inline bool
 lc_sv_is_equal(struct lc_sv lhs, struct lc_sv rhs)
 {
-	return lhs.length == rhs.length && 0 == memcmp(lhs.s, rhs.s, lhs.length);
+	return lhs.length == rhs.length && 0 == lc_memcmp(lhs.s, rhs.s, lhs.length);
 }
 
 LC_NODISCARD static inline bool
 lc_sv_is_prefix(struct lc_sv sv, struct lc_sv prefix)
 {
-	return prefix.length <= sv.length && 0 == memcmp(sv.s, prefix.s, prefix.length);
+	return prefix.length <= sv.length && 0 == lc_memcmp(sv.s, prefix.s, prefix.length);
 }
 
 LC_NODISCARD static inline bool
 lc_sv_is_suffix(struct lc_sv sv, struct lc_sv suffix)
 {
 	return suffix.length <= sv.length
-	    && 0 == memcmp(sv.s + sv.length - suffix.length, suffix.s, suffix.length);
+	    && 0 == lc_memcmp(sv.s + sv.length - suffix.length, suffix.s, suffix.length);
 }
 
 LC_NODISCARD static inline struct lc_sv
@@ -1804,7 +1808,7 @@ lc_sv_find(struct lc_sv sv, struct lc_sv substring)
 		return sv(0);
 
 #if 0
-	// TODO(larry): Performance test between the nested for loop vs memcmp
+	// TODO(larry): Performance test between the nested for loop vs lc_memcmp
 	for (size_t i = 0; i <= sv.length - substring.length; i++) {
 		for (size_t j = 0; j < substring.length; j++)
 			if (sv.s[i + j] != substring.s[j])
@@ -1816,9 +1820,9 @@ next:;
 
 
 #else
-	// TODO(larry): Performance test between the nested for loop vs memcmp
+	// TODO(larry): Performance test between the nested for loop vs lc_memcmp
 	for (size_t i = 0; i <= sv.length - substring.length; i++)
-		if (0 == memcmp(sv.s + i, substring.s, substring.length))
+		if (0 == lc_memcmp(sv.s + i, substring.s, substring.length))
 			return sv(substring.length, sv.s + i);
 
 #endif
@@ -1839,7 +1843,7 @@ LC_NODISCARD static inline enum lc_order
 lc_sv_cmp(struct lc_sv lhs, struct lc_sv rhs)
 {
 	const size_t len = MAX(lhs.length, rhs.length);
-	return lc_order_from_int(memcmp(lhs.s, rhs.s, len));
+	return lc_order_from_int(lc_memcmp(lhs.s, rhs.s, len));
 }
 #endif
 
@@ -1980,7 +1984,6 @@ lc_sv_split_c(struct lc_sv *restrict iter, char c, struct lc_sv *restrict value)
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
-#include <string.h>
 
 enum lc_log_level
 {
@@ -2023,6 +2026,8 @@ lc_log_level_from_env(const char *env)
 
 	if (NULL == log_level)
 		return level_mask;
+
+	extern char *(strstr)(const char *haystack, const char *needle);
 
 	if (strstr(log_level, "default"))
 		level_mask |= LC_LOG_LEVEL_DEFAULT;
@@ -2639,7 +2644,7 @@ lc_io_destroy_(LC_ARGS_DECL, struct lc_io io)
 #define LC_IO_IMPL_READ_BEGIN(args, n, buffer, written)                                                      \
 	case LC_IO_MODE_READ:                                                                                \
 		do {                                                                                         \
-			size_t n            = va_arg(args, size_t);                                            \
+			size_t n           = va_arg(args, size_t);                                           \
 			void *buffer       = va_arg(args, void *);                                           \
 			lc_io_len *written = va_arg(args, lc_io_len *);
 #define LC_IO_IMPL_READ_END                                                                                  \
@@ -2651,7 +2656,7 @@ lc_io_destroy_(LC_ARGS_DECL, struct lc_io io)
 #define LC_IO_IMPL_READ_AT_BEGIN(args, n, buffer, offset, written)                                           \
 	case LC_IO_MODE_READ_AT:                                                                             \
 		do {                                                                                         \
-			size_t n            = va_arg(args, size_t);                                            \
+			size_t n           = va_arg(args, size_t);                                           \
 			void *buffer       = va_arg(args, void *);                                           \
 			lc_io_off offset   = va_arg(args, lc_io_off);                                        \
 			lc_io_len *written = va_arg(args, lc_io_len *);
@@ -2665,7 +2670,7 @@ lc_io_destroy_(LC_ARGS_DECL, struct lc_io io)
 #define LC_IO_IMPL_WRITE_BEGIN(args, n, buffer, written)                                                     \
 	case LC_IO_MODE_WRITE:                                                                               \
 		do {                                                                                         \
-			size_t n            = va_arg(args, size_t);                                            \
+			size_t n           = va_arg(args, size_t);                                           \
 			void *buffer       = va_arg(args, void *);                                           \
 			lc_io_len *written = va_arg(args, lc_io_len *);
 #define LC_IO_IMPL_WRITE_END                                                                                 \
@@ -2677,7 +2682,7 @@ lc_io_destroy_(LC_ARGS_DECL, struct lc_io io)
 #define LC_IO_IMPL_WRITE_AT_BEGIN(args, n, buffer, offset, written)                                          \
 	case LC_IO_MODE_WRITE_AT:                                                                            \
 		do {                                                                                         \
-			size_t n            = va_arg(args, size_t);                                            \
+			size_t n           = va_arg(args, size_t);                                           \
 			void *buffer       = va_arg(args, void *);                                           \
 			lc_io_off offset   = va_arg(args, lc_io_off);                                        \
 			lc_io_len *written = va_arg(args, lc_io_len *);
@@ -2867,22 +2872,22 @@ lc_io_from_stdfile(FILE *file)
 		        type_equal(*slice, struct lc_mut_bslice) | type_equal(*slice, struct lc_bslice),     \
 		        "slice must be a pointer to a byte slice"                                            \
 		);                                                                                           \
-		if (1 == n && cursor->offset < slice->size) { \
-			*(u8 *)buffer = slice->data[cursor->offset]; \
-			cursor->offset += *written = 1; \
-			break; \
-		} \
+		if (1 == n && cursor->offset < slice->size) {                                                \
+			*(u8 *)buffer = slice->data[cursor->offset];                                         \
+			cursor->offset += *written = 1;                                                      \
+			break;                                                                               \
+		}                                                                                            \
                                                                                                              \
 		const struct lc_bslice read_slice =                                                          \
 		        lc_bslice_subslice(*(struct lc_bslice *)slice, cursor->offset, n);                   \
-		const size_t to_write = MIN(n, read_slice.size);                                              \
+		const size_t to_write = MIN(n, read_slice.size);                                             \
                                                                                                              \
 		if (0 == to_write)                                                                           \
 			goto err_eof;                                                                        \
 		else if (1 == to_write)                                                                      \
 			*(u8 *)buffer = *(u8 *)read_slice.data;                                              \
 		else                                                                                         \
-			memcpy(buffer, read_slice.data, to_write);                                           \
+			lc_memcpy(buffer, read_slice.data, to_write);                                        \
 		cursor->offset += *written = to_write;                                                       \
                                                                                                              \
 		break;                                                                                       \
@@ -2896,22 +2901,22 @@ lc_io_from_stdfile(FILE *file)
 		        type_equal(*slice, struct lc_mut_bslice) | type_equal(*slice, struct lc_bslice),     \
 		        "slice must be a pointer to a byte slice"                                            \
 		);                                                                                           \
-		if (1 == n && cursor->offset < slice->size) { \
-			*(u8 *)buffer = slice->data[cursor->offset]; \
-			cursor->offset += *written = 1; \
-			break; \
-		} \
+		if (1 == n && cursor->offset < slice->size) {                                                \
+			*(u8 *)buffer = slice->data[cursor->offset];                                         \
+			cursor->offset += *written = 1;                                                      \
+			break;                                                                               \
+		}                                                                                            \
                                                                                                              \
 		const struct lc_bslice read_slice =                                                          \
 		        lc_bslice_subslice((*(struct lc_bslice *)slice), offset, n);                         \
-		const size_t to_write = MIN(n, read_slice.size);                                              \
+		const size_t to_write = MIN(n, read_slice.size);                                             \
                                                                                                              \
 		if (0 == to_write)                                                                           \
 			goto err_eof;                                                                        \
 		else if (1 == to_write)                                                                      \
 			*(u8 *)buffer = *(u8 *)read_slice.data;                                              \
 		else                                                                                         \
-			memcpy(buffer, read_slice.data, to_write);                                           \
+			lc_memcpy(buffer, read_slice.data, to_write);                                        \
 		*written = to_write;                                                                         \
                                                                                                              \
 		break;                                                                                       \
@@ -3099,7 +3104,7 @@ extern enum lc_io_error lc_io_mut_slice_impl(LC_ARGS_DECL, void *data, enum lc_i
 		else if (1 == to_write)
 			*(u8 *)write_slice.data = *(u8 *)buffer;
 		else
-			memcpy(write_slice.data, buffer, to_write);
+			lc_memcpy(write_slice.data, buffer, to_write);
 		cursor->offset += *written = to_write;
 
 		break;
@@ -3116,7 +3121,7 @@ extern enum lc_io_error lc_io_mut_slice_impl(LC_ARGS_DECL, void *data, enum lc_i
 		else if (1 == to_write)
 			*(u8 *)write_slice.data = *(u8 *)buffer;
 		else
-			memcpy(write_slice.data, buffer, to_write);
+			lc_memcpy(write_slice.data, buffer, to_write);
 		*written = to_write;
 
 		break;
@@ -3325,7 +3330,7 @@ extern enum lc_io_error lc_io_ring_buffer_impl(LC_ARGS_DECL, void *restrict data
 		if (1 == len) {
 			*out = slice->data[cursor->offset];
 		} else {
-			memcpy(out, &slice->data[cursor->offset], len);
+			lc_memcpy(out, &slice->data[cursor->offset], len);
 		}
 
 		out            += len;
@@ -3336,7 +3341,7 @@ extern enum lc_io_error lc_io_ring_buffer_impl(LC_ARGS_DECL, void *restrict data
 			if (1 == n) {
 				*out = slice->data[0];
 			} else {
-				memcpy(out, &slice->data[0], n);
+				lc_memcpy(out, &slice->data[0], n);
 			}
 			out            += n;
 			cursor->offset  = n;
@@ -3349,7 +3354,7 @@ extern enum lc_io_error lc_io_ring_buffer_impl(LC_ARGS_DECL, void *restrict data
 
 	LC_IO_IMPL_READ_AT_BEGIN(args, n, buffer, offset, written)
 	{
-		lc_log_todo_once("Use memcpy instead");
+		lc_log_todo_once("Use lc_memcpy instead");
 
 		u8 *out = buffer;
 		for (size_t i = 0; i < n; i++)
@@ -3368,7 +3373,7 @@ extern enum lc_io_error lc_io_ring_buffer_impl(LC_ARGS_DECL, void *restrict data
 		if (1 == len) {
 			slice->data[cursor->offset] = *in;
 		} else {
-			memcpy(&slice->data[cursor->offset], in, len);
+			lc_memcpy(&slice->data[cursor->offset], in, len);
 		}
 
 		in             += len;
@@ -3377,7 +3382,7 @@ extern enum lc_io_error lc_io_ring_buffer_impl(LC_ARGS_DECL, void *restrict data
 
 
 		if (cursor->offset == slice->size) {
-			memcpy(&slice->data[0], in, n);
+			lc_memcpy(&slice->data[0], in, n);
 			in             += n;
 			cursor->offset  = n;
 		}
@@ -3389,7 +3394,7 @@ extern enum lc_io_error lc_io_ring_buffer_impl(LC_ARGS_DECL, void *restrict data
 
 	LC_IO_IMPL_WRITE_AT_BEGIN(args, n, buffer, offset, written)
 	{
-		lc_log_todo_once("Use memcpy instead");
+		lc_log_todo_once("Use lc_memcpy instead");
 
 		const u8 *in = buffer;
 
@@ -3747,7 +3752,7 @@ lc_vector_append_(struct lc_vector *vector, enum lc_allocator_error *err, size_t
 		vector->cap *= 2;
 	}
 
-	memcpy((u8 *)vector->data + vector->len, item, item_size);
+	lc_memcpy((u8 *)vector->data + vector->len, item, item_size);
 	vector->len += item_size;
 
 	return true;
@@ -3788,8 +3793,6 @@ lc_string_end(struct lc_string str)
 	return str.s + str.len;
 }
 
-#include <string.h>
-
 LC_NODISCARD
 static inline struct lc_string
 lc_string_join_(
@@ -3825,7 +3828,7 @@ lc_string_join_(
 		if (str != s)
 			*s++ = sep;
 
-		memcpy(s, string_views[i].s, string_views[i].length);
+		lc_memcpy(s, string_views[i].s, string_views[i].length);
 		s += string_views[i].length;
 	}
 
@@ -3862,7 +3865,7 @@ lc_string_clone_from_sv__(struct lc_allocator allocator, struct lc_source_loc sr
 	return (struct lc_string){
 	        .len = sv.length,
 	        .s   = (const char *)
-	                memcpy(lc_mem_alloc_zero__(src_loc, allocator, &err, sv.length + 1),
+	                lc_memcpy(lc_mem_alloc_zero__(src_loc, allocator, &err, sv.length + 1),
 	                       (const void *)sv.s,
 	                       sv.length),
 	};
@@ -3935,7 +3938,7 @@ joining:;
 		if (path != s)
 			*s++ = SEP;
 
-		memcpy(s, string_views[i].s, string_views[i].length);
+		lc_memcpy(s, string_views[i].s, string_views[i].length);
 		s += string_views[i].length;
 	}
 
