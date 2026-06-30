@@ -17,8 +17,6 @@
 #define LC_HM_API extern
 #endif
 
-
-
 #include <stddef.h>
 #include <stdbool.h>
 
@@ -80,17 +78,23 @@ for (size_t i = 0; lc_hashmap_iter(&map, &i); i++) {
 
 #ifdef LC_HAVE_SV
 
-
-
 static inline bool
 lc_hashmap_get_sv(const struct lc_hashmap *map, struct lc_sv key, void *restrict out)
 {
 	return lc_hashmap_get(map, key.length, key.s, out);
 }
 
-static inline bool lc_hashmap_put(struct lc_hashmap *map, size_t n, const char key[restrict n], const void *val, void *out);
-static inline bool lc_hashmap_del(struct lc_hashmap *map, size_t n, const char key[restrict n], void *restrict out);
+static inline bool
+lc_hashmap_put_sv(const struct lc_hashmap *map, struct lc_sv key, const void *val, void *out)
+{
+	return lc_hashmap_put(map, key.length, key.s, val, out);
+}
 
+static inline bool
+lc_hashmap_del_sv(const struct lc_hashmap *map, struct lc_sv key, void *restrict out)
+{
+	return lc_hashmap_del(map, key.length, key.s, out);
+}
 
 #endif
 
