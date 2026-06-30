@@ -18,7 +18,7 @@
 /// - Source location ..............................................40. [LC_XSL]
 /// - Allocator ...................................................449. [LC_XAC]
 /// - ANSI Escape Code .............................................54. [LC_XAE]
-/// - Time ........................................................129. [LC_XCH]
+/// - Time ........................................................191. [LC_XCH]
 /// - String view .................................................272. [LC_XSV]
 /// - Logger ......................................................348. [LC_XLG]
 /// - Context ......................................................28. [LC_XCT]
@@ -1517,8 +1517,8 @@ lc_bump_allocator_(struct lc_mut_bslice slice, enum lc_allocator_error *err, str
 ////////////////////////////////////////////////////////////////////////////////
 
 struct lc_clock {
-	u64 sec;
-	u64 nsec;
+	i64 sec;
+	i64 nsec;
 };
 
 static_assert(sizeof(u64[2]) == sizeof(struct lc_clock), "");
@@ -1550,8 +1550,8 @@ static LC_ALWAYS_INLINE struct lc_clock
 lc_clock_from_timespec(struct timespec ts)
 {
 	return (struct lc_clock){
-	        .sec  = (u64)ts.tv_sec,
-	        .nsec = (u64)ts.tv_nsec,
+	        .sec  = ts.tv_sec,
+	        .nsec = ts.tv_nsec,
 	};
 }
 
@@ -1627,6 +1627,10 @@ lc_clock_since_ms(struct lc_clock clock)
 LC_NODISCARD static inline enum lc_order
 lc_clock_cmp(struct lc_clock lhs, struct lc_clock rhs)
 {
+#if 0
+	// Simple, but very slow approach. The code is still here, but disabled
+	// for understandability and future reference
+
 	if (lhs.sec < rhs.sec)
 		return LC_ORDER_LESS;
 	if (lhs.sec > rhs.sec)
@@ -1637,6 +1641,64 @@ lc_clock_cmp(struct lc_clock lhs, struct lc_clock rhs)
 		return LC_ORDER_GREATER;
 
 	return LC_ORDER_EQUAL;
+#else
+#if defined(LC_CLOCK_NO_ASSUMPTION)
+	// Slower compare, that works for all (even invalid) input.
+	//
+	// This is the approach you would expect from a performant branchless
+	// approach because you have to workaround the corner case of
+	// overflow/overflow.
+	//
+	// Clever, but idiomatic. It contains more conditional operations than
+	// the naive approach however.
+	int_fast8_t sec  = (rhs.sec  < lhs.sec)  - (rhs.sec  > lhs.sec);
+	int_fast8_t nsec = (rhs.nsec < lhs.nsec) - (rhs.nsec > lhs.nsec);
+
+	sec *= 8;
+	sec += nsec;
+
+	return (0 < sec) - (0 > sec);
+#else
+	// Naive subtraction based compare (kinda how strcmp works)
+	// The reason it is naive and does not work for all cases is because of
+	// overflow/underflow of extreme high/low values. BUT IT IS FAST!
+	//
+	// We can sidestep the problems with the following assumptions however:
+
+	// Assumption 1:
+	//
+	// Negative seconds does not make sense. Most implementation uses
+	// signed integer to represent seconds in timespec anyway.
+	//
+	// With this assumption, we are guaranteed to never underflow when we
+	// do subtraction.
+	//
+	lc_assume(0 <= (i64)lhs.sec);
+	lc_assume(0 <= (i64)rhs.sec);
+
+	// Assumption 2:
+	//
+	// We assume that the .nsec is in range of nanoseconds [0, 10^9]
+	// This is also mandated by POSIX and the C standard anyway.
+	//
+	// With this assumption, we are guaranteed to never underflow when we
+	// do subtraction.
+	//
+	// For reference:
+	//   milli 10^-3
+	//   micro 10^-6
+	//   nano  10^-9
+	lc_assume(IN_RANGE((i32)lhs.nsec, 0, 999999999));
+	lc_assume(IN_RANGE((i32)rhs.nsec, 0, 999999999));
+
+	i64 sec  = (i64)lhs.sec  - (i64)rhs.sec;
+	i32 nsec = (i32)lhs.nsec - (i32)rhs.nsec;
+
+	sec = sec ? sec : nsec;
+
+	return (0 < sec) - (0 > sec);
+#endif
+#endif
 }
 
 #endif

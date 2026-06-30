@@ -8,3 +8,6 @@
 *.elf
 
 tags
+
+perf.data
+perf.data.old
