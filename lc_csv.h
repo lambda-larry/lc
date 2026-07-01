@@ -30,7 +30,6 @@ struct lc_sv {
 struct lc_csv {
 	struct {
 		struct lc_sv buf;
-		int lineno;
 	} state;
 	struct {
 		char delimiter;
