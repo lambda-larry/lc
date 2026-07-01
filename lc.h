@@ -1712,6 +1712,7 @@ lc_clock_cmp(struct lc_clock lhs, struct lc_clock rhs)
 ////////////////////////////////////////////////////////////////////////////////
 
 extern size_t strlen(const char *);
+#define LC_HAVE_SV
 
 struct lc_sv {
 	size_t length;
