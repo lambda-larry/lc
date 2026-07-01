@@ -38,6 +38,7 @@ struct lc_sv {
 #endif
 #endif
 
+#include <stdbool.h>
 
 struct lc_csv {
 	struct {
