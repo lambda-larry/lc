@@ -64,7 +64,8 @@ LC_CSV_API bool lc_csv_row_iter(
 
 #ifdef LC_IMPLEMENTATION
 
-LC_CSV_API bool lc_csv_iter(struct lc_csv *csv, struct lc_csv_row *row)
+LC_CSV_API bool
+lc_csv_iter(struct lc_csv *csv, struct lc_csv_row *row)
 {
 	const char *p = csv->state.buf.s;
 	const char *e = csv->state.buf.length + p;
@@ -107,7 +108,8 @@ done:
 	return true;
 }
 
-LC_CSV_API bool lc_csv_row_iter(
+LC_CSV_API bool
+lc_csv_row_iter(
 	struct lc_csv *csv,
 	struct lc_csv_row *row,
 	size_t n, char out[restrict n],
