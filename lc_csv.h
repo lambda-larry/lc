@@ -26,6 +26,18 @@ struct lc_sv {
 
 #endif
 
+#ifndef lc_unreachable
+#if __STDC_VERSION__ < 202311L
+#if LC_CC_GNU
+#define lc_unreachable __builtin_unreachable
+#else
+#define lc_unreachable() *((void *volatile *volatile)NULL)
+#endif
+#else
+#define lc_unreachable unreachable
+#endif
+#endif
+
 
 struct lc_csv {
 	struct {
@@ -128,7 +140,7 @@ LC_CSV_API bool lc_csv_row_iter(
 
 	}
 
-	unreachable();
+	lc_unreachable();
 
 
 quoted_begin:
@@ -145,7 +157,7 @@ quoted:
 	case 0x2D ... 0x7E: *o++ = *p++; goto quoted;
 	}
 
-	unreachable();
+	lc_unreachable();
 
 quoted_end:
 	switch (*p) {
@@ -156,7 +168,7 @@ quoted_end:
 		goto done_eof;
 	}
 
-	unreachable();
+	lc_unreachable();
 
 field_begin:
 
@@ -174,7 +186,7 @@ field:
 	case 0x2D ... 0x7E: *o++ = *p++; goto field;
 	}
 
-	unreachable();
+	lc_unreachable();
 
 field_end:
 	goto done;
