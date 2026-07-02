@@ -121,7 +121,6 @@ lc_csv_row_iter(
 	const char *e = row->state.buf.length + p;
 
 	char *o = out;
-	char *q = out + n;
 
 	if (p >= e)
 		return false;
