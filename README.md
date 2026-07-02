@@ -11,7 +11,7 @@ library                      | category    | C Version | description
 [lc.h](lc.h)                 | Core        |     >=c11 | Monolith library inspired by odin lang, contains everything
 [lc_hashmap.h](lc_hashmap.h) | Core        |     >=c99 | Open addressing hashmap
 [lc_deflate.h](lc_deflate.h) | Compression |       cXX | Deflate decompression routine
-[lc_csv.h](lc_csv.h)         | Parser      |   >=gnu99 | **BYOB** csv parser
+[lc_csv.h](lc_csv.h)         | Parser      |     >=c99 | **BYOB** csv parser
 [lc_ini.h](lc_ini.h)         | Parser      |       cXX | **BYOB** ini parser
 [lc_json.h](lc_json.h)       | Parser      |       cXX | **BYOB** json parser
 [lc_rng.h](lc_rng.h)         | RNG         |       cXX |

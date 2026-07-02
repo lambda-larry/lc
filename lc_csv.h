@@ -65,6 +65,10 @@ LC_CSV_API bool lc_csv_row_iter(
 
 #ifdef LC_IMPLEMENTATION
 
+#ifndef IN_RANGE
+#define IN_RANGE(X, LO, HI) (((LO) <= (X)) & ((X) <= (HI)))
+#endif
+
 LC_CSV_API bool
 lc_csv_iter(struct lc_csv *csv, struct lc_csv_row *row)
 {
@@ -125,22 +129,19 @@ lc_csv_row_iter(
 	if (p >= e)
 		return false;
 
-	if (!csv->config.delimiter) {
+	if (!csv->config.delimiter)
 		csv->config.delimiter = ',';
-	}
 
 	if (csv->config.delimiter == *p)
 		goto done;
 
-	switch (*p) {
-	case 0x22: p++; goto quoted_begin;
-
-	case 0x20 ... 0x21: goto field_begin;
-	case 0x23 ... 0x2B: goto field_begin;
-	case 0x2C ... 0x2C: goto field_begin; // comma (in case another delimiter is used)
-	case 0x2D ... 0x7E: goto field_begin;
-
+	if (IN_RANGE(*p, 0x22, 0x22)) {
+		p++;
+		goto quoted_begin;
 	}
+
+	if (IN_RANGE(*p, 0x20, 0x7E))
+		goto field_begin;
 
 	lc_unreachable();
 
@@ -148,27 +149,27 @@ lc_csv_row_iter(
 quoted_begin:
 
 quoted:
-	switch (*p) {
-	case 0x0D ... 0x0D: *o++ = *p++; goto quoted;
-	case 0x0A ... 0x0A: *o++ = *p++; goto quoted;
+	if (IN_RANGE(*p, 0x22, 0x22)) {
+		p++;
+		goto quoted_end;
+	}
 
-	case 0x20 ... 0x21: *o++ = *p++; goto quoted;
-	case 0x22 ... 0x22:         p++; goto quoted_end;
-	case 0x23 ... 0x2B: *o++ = *p++; goto quoted;
-	case 0x2C ... 0x2C: *o++ = *p++; goto quoted;
-	case 0x2D ... 0x7E: *o++ = *p++; goto quoted;
+	if (IN_RANGE(*p, 0x20, 0x7E) | IN_RANGE(*p, 0x0D, 0x0D) | IN_RANGE(*p, 0x0A, 0x0A)) {
+		*o++ = *p++;
+		goto quoted;
 	}
 
 	lc_unreachable();
 
 quoted_end:
-	switch (*p) {
-	case 0x22 ... 0x22: *o++ = *p++; goto quoted;
-	default:
-		if (csv->config.delimiter == *p)
-			goto done;
-		goto done_eof;
+	if (IN_RANGE(*p, 0x22, 0x22)) {
+		*o++ = *p++;
+		goto quoted;
 	}
+
+	if (csv->config.delimiter == *p)
+		goto done;
+	goto done_eof;
 
 	lc_unreachable();
 
@@ -181,11 +182,9 @@ field:
 	if (p >= e)
 		goto done_eof;
 
-	switch (*p) {
-	case 0x20 ... 0x21: *o++ = *p++; goto field;
-	case 0x23 ... 0x2B: *o++ = *p++; goto field;
-	case 0x2C ... 0x2C: *o++ = *p++; goto field;
-	case 0x2D ... 0x7E: *o++ = *p++; goto field;
+	if (IN_RANGE(*p, 0x20, 0x7E)) {
+		*o++ = *p++;
+		goto field;
 	}
 
 	lc_unreachable();
