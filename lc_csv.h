@@ -94,7 +94,7 @@ lc_csv_iter(struct lc_csv *csv, struct lc_csv_row *row)
 		} else {
 			if ('"' == p[0]) {
 				if ('"' == p[1]) {
-					p++; p++;
+					p++;
 				} else {
 					in_quote = false;
 				}
