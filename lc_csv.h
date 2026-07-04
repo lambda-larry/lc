@@ -79,32 +79,38 @@ lc_csv_iter(struct lc_csv *csv, struct lc_csv_row *row)
 	if (p >= e)
 		return false;
 
-	bool in_quote = false;
-	for (; p < e; p++) {
-		if (!in_quote) {
-			if ('"' == p[0]) {
-				in_quote = true;
-			}
-			if ('\r' == p[0]) {
-				if ('\n' == p[1]) {
-					o = p + 2;
-					goto done;
-				}
-			}
-		} else {
-			if ('"' == p[0]) {
-				if ('"' == p[1]) {
-					p++;
-				} else {
-					in_quote = false;
-				}
-			}
-		}
+quote_outside:
+	if (p >= e)
+		goto eof;
+
+	if (IN_RANGE(*p, 0x22, 0x22)) {
+		p++; goto quote_inside;
 	}
 
+	if (IN_RANGE(p[0], 0x0D, 0x0D) & IN_RANGE(p[1], 0x0A, 0x0A)) {
+		o = p + 2;
+		goto eol;
+	}
+
+	p++; goto quote_outside;
+
+quote_inside:
+	if (p >= e)
+		return false;
+
+	if (IN_RANGE(p[0], 0x22, 0x22)) {
+		if (IN_RANGE(p[1], 0x22, 0x22)) {
+			p++; p++; goto quote_inside;
+		}
+		p++; goto quote_outside;
+	}
+
+	p++; goto quote_inside;
+
+eof:
 	o = p;
 
-done:
+eol:
 	row->state.buf.s      = csv->state.buf.s;
 	row->state.buf.length = p - csv->state.buf.s;
 	csv->state.buf.length = e - o;
