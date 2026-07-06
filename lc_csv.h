@@ -46,6 +46,10 @@ struct lc_csv {
 	} state;
 	struct {
 		char delimiter;
+
+		/// single line comment token if non-zero
+		/// Only parsed at start of line
+		char comment;
 	} config;
 };
 
@@ -78,6 +82,24 @@ lc_csv_iter(struct lc_csv *csv, struct lc_csv_row *row)
 
 	if (p >= e)
 		return false;
+
+skip_comment:
+	if (csv->config.comment && csv->config.comment == *p) {
+
+skip_comment_next:
+		if (++p >= e)
+			return false;
+
+		if (IN_RANGE(p[0], 0x0D, 0x0D) & IN_RANGE(p[1], 0x0A, 0x0A)) {
+			p += 2;
+			goto skip_comment;
+		}
+
+		goto skip_comment_next;
+	}
+
+	csv->state.buf.s      = p;
+	csv->state.buf.length = e - p;
 
 quote_outside:
 	if (p >= e)
