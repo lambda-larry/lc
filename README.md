@@ -16,6 +16,7 @@ library                      | category    | C Version | description
 [lc_ini.h](lc_ini.h)         | Parser      |       cXX | **BYOB** ini parser
 [lc_json.h](lc_json.h)       | Parser      |       cXX | **BYOB** json parser
 [lc_rng.h](lc_rng.h)         | RNG         |       cXX |
+[lc_vfs.h](lc_vfs.h)         | Platform    |       cXX | Virtual filesystem interface
 
 Zero allocation API design
 ==========================
