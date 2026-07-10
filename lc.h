@@ -4499,9 +4499,9 @@ lc_base64_decode(size_t n, const char in[restrict n], size_t m, u8 out[restrict 
 		} else if (IN_RANGE(*in_p, 'A', 'Z')) {
 			bits = 00 + *in_p++ - 'A';
 		} else if (IN_RANGE(*in_p, 'a', 'z')) {
-			bits = 26 + *in_p++ - 'A';
+			bits = 26 + *in_p++ - 'a';
 		} else if (IN_RANGE(*in_p, '0', '9')) {
-			bits = 52 + *in_p++ - 'A';
+			bits = 52 + *in_p++ - '0';
 		} else switch (*in_p) {
 		case '+': bits = 62 + *in_p++ - '+'; break;
 		case '/': bits = 63 + *in_p++ - '/'; break;
