@@ -7,6 +7,7 @@
 
 #ifndef LC_HAVE_SV
 #define LC_HAVE_SV
+#include <stddef.h>
 
 struct lc_sv {
 	size_t length;

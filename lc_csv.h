@@ -12,17 +12,12 @@
 
 #ifndef LC_HAVE_SV
 #define LC_HAVE_SV
-#define LEN(X) (sizeof(X) / sizeof(X)[0])
-
 #include <stddef.h>
 
 struct lc_sv {
 	size_t length;
 	const char *s;
 };
-
-#define sv(...)       ((struct lc_sv){__VA_ARGS__})
-#define sv_c(str)     sv(.length = LEN(str) - 1, .s = str)
 
 #endif
 
