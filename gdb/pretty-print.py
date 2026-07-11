@@ -2,7 +2,7 @@ import gdb
 import gdb.printing
 import gdb.types
 
-pp = gdb.printing.RegexpCollectionPrettyPrinter('main')
+pp = gdb.printing.RegexpCollectionPrettyPrinter('lc')
 
 class lc_sv(gdb.ValuePrinter):
     def __init__(self, val):
