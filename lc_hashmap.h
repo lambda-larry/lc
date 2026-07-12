@@ -185,10 +185,7 @@ find_bucket(const struct lc_hashmap *map, size_t n, const char key[restrict n])
 static void
 rehash(struct lc_hashmap *map)
 {
-	size_t keys = 0;
-	for (size_t i = 0; i < map->capacity; i++)
-		if (map->buckets[i].key)
-			keys++;
+	size_t keys = map->count;
 
 	size_t capacity = map->capacity;
 	while ((keys * 100) / capacity >= LC_HM_LOAD_FACTOR_LOW)
