@@ -41,3 +41,9 @@ pp.add_printer('lc_clock', '^lc_clock$', lc_clock)
 
 
 gdb.printing.register_pretty_printer(gdb.current_objfile(), pp, replace=True)
+
+# Skip trivial functions
+gdb.execute('skip -function lc_sv_len')
+gdb.execute('skip -function lc_sv_is_empty')
+gdb.execute('skip -function lc_sv_sv_begin')
+gdb.execute('skip -function lc_sv_sv_end')
