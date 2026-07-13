@@ -35,6 +35,7 @@ struct lc_sv {
 
 #include <stdbool.h>
 
+/// NOTE: ABI unstable
 struct lc_csv {
 	struct {
 		struct lc_sv buf;
@@ -45,6 +46,10 @@ struct lc_csv {
 		/// single line comment token if non-zero
 		/// Only parsed at start of line
 		char comment;
+
+		/// Allow parsing line with LF only
+		/// Some exporters outputs LF only rather than following the spec
+		bool lf_only;
 	} config;
 };
 
@@ -85,6 +90,11 @@ skip_comment_next:
 		if (++p >= e)
 			return false;
 
+		if (csv->config.lf_only & IN_RANGE(p[0], 0x0A, 0x0A)) {
+			p += 1;
+			goto skip_comment;
+		}
+
 		if (IN_RANGE(p[0], 0x0D, 0x0D) & IN_RANGE(p[1], 0x0A, 0x0A)) {
 			p += 2;
 			goto skip_comment;
@@ -102,6 +112,11 @@ quote_outside:
 
 	if (IN_RANGE(*p, 0x22, 0x22)) {
 		p++; goto quote_inside;
+	}
+
+	if (csv->config.lf_only & IN_RANGE(p[0], 0x0A, 0x0A)) {
+		o = p + 1;
+		goto eol;
 	}
 
 	if (IN_RANGE(p[0], 0x0D, 0x0D) & IN_RANGE(p[1], 0x0A, 0x0A)) {
