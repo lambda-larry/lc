@@ -348,9 +348,17 @@ done:
 		}                                                                                            \
                                                                                                              \
 		switch (*p) {                                                                                \
-		case '0' ... '0': acc *= 10; acc += *p++ - '0'; goto done_fast;                              \
+		case '0' ... '0': acc *= 10; acc += *p++ - '0'; goto parse_zero;                             \
 		case '1' ... '9': acc *= 10; acc += *p++ - '0'; goto parse_digit;                            \
 		default: return false;                                                                       \
+		}                                                                                            \
+                                                                                                             \
+parse_zero:                                                                                                  \
+		switch (*p) {                                                                                \
+		case '.': p++; goto parse_fraction;                                                          \
+		case 'e': p++; goto parse_exponent;                                                          \
+		case 'E': p++; goto parse_exponent;                                                          \
+		default:  goto done;                                                                         \
 		}                                                                                            \
                                                                                                              \
 parse_digit:                                                                                                 \
@@ -428,7 +436,6 @@ done:                                                                           
                                                                                                              \
 			acc += frac;                                                                         \
 		}                                                                                            \
-done_fast:                                                                                                   \
                                                                                                              \
 		json->raw = p;                                                                               \
 		*out = acc;                                                                                  \
