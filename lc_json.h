@@ -279,7 +279,7 @@ escaped_hex:
 
 utf16_decode:
 	{
-		enum : rune
+		enum
 		{
 			LEAD_OFFSET      = 0x0D800 - (0x10000 >> 10),
 			SURROGATE_OFFSET = 0x10000 - (0x0D800 << 10) - 0x0DC00,
@@ -648,7 +648,7 @@ escaped_hex:
 
 utf16_decode:
 	{
-		enum : rune
+		enum
 		{
 			LEAD_OFFSET      = 0x0D800 - (0x10000 >> 10),
 			SURROGATE_OFFSET = 0x10000 - (0x0D800 << 10) - 0x0DC00,
