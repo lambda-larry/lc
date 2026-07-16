@@ -464,9 +464,17 @@ lc_json_f32(struct lc_json *json, f32 *out)
 	}
 
 	switch (*p) {
-	case '0' ... '0': p++; goto done;
+	case '0' ... '0': p++; goto parse_zero;
 	case '1' ... '9': p++; goto parse_digit;
 	default: return false;
+	}
+
+parse_zero:
+	switch (*p) {
+	case '.':         p++; goto parse_fraction;
+	case 'e':         p++; goto parse_exponent;
+	case 'E':         p++; goto parse_exponent;
+	default:  goto done;
 	}
 
 parse_digit:
@@ -518,9 +526,17 @@ lc_json_f64(struct lc_json *json, f64 *out)
 	}
 
 	switch (*p) {
-	case '0' ... '0': p++; goto done;
+	case '0' ... '0': p++; goto parse_zero;
 	case '1' ... '9': p++; goto parse_digit;
 	default: return false;
+	}
+
+parse_zero:
+	switch (*p) {
+	case '.':         p++; goto parse_fraction;
+	case 'e':         p++; goto parse_exponent;
+	case 'E':         p++; goto parse_exponent;
+	default:  goto done;
 	}
 
 parse_digit:
