@@ -19,7 +19,7 @@
 /// - Allocator ...................................................448. [LC_XAC]
 /// - ANSI Escape Code .............................................54. [LC_XAE]
 /// - Time ........................................................191. [LC_XCH]
-/// - String view .................................................272. [LC_XSV]
+/// - String view .................................................344. [LC_XSV]
 /// - Logger ......................................................351. [LC_XLG]
 /// - Context ......................................................28. [LC_XCT]
 /// - Input/Output ................................................274. [LC_XIO]
@@ -1737,6 +1737,8 @@ LC_NODISCARD static inline struct lc_sv lc_sv_find(struct lc_sv sv, struct lc_sv
 LC_NODISCARD static inline bool lc_sv_is_substring(struct lc_sv sv, struct lc_sv substring);
 LC_NODISCARD static inline struct lc_sv lc_sv_sub(struct lc_sv sv, size_t len, size_t idx);
 
+static inline bool lc_sv_parse_i64(struct lc_sv sv, int base, i64 *out);
+
 static inline bool lc_sv_split(struct lc_sv *restrict iter, struct lc_sv delim, struct lc_sv *restrict value);
 static inline bool lc_sv_split_c(struct lc_sv *restrict iter, char c, struct lc_sv *restrict value);
 
@@ -1847,6 +1849,75 @@ lc_sv_cmp(struct lc_sv lhs, struct lc_sv rhs)
 	return lc_order_from_int(lc_memcmp(lhs.s, rhs.s, len));
 }
 #endif
+
+static inline bool
+lc_sv_parse_i64(struct lc_sv sv, int base, i64 *out)
+{
+	i64 ret = 0;
+	if (0 == sv.length)
+		return false;
+
+	const char *p = sv.s;
+	const char *e = sv.s + sv.length;
+
+	if (0 == base) {
+		if (IN_RANGE(*p, '0', '0')) {
+			p++;
+			goto parse_base;
+		}
+		if (IN_RANGE(*p, '1', '9')) {
+			base = 10;
+			goto parse_int;
+		}
+		return false;
+	}
+
+parse_int:
+	if (p >= e)
+		goto done;
+
+	if (IN_RANGE(*p, '0', '9')) {
+		ret *= base;
+		ret += *p++ - '0' + 00;
+		goto parse_int;
+	}
+	if (IN_RANGE(*p, 'a', 'f')) {
+		ret *= base;
+		ret += *p++ - 'a' + 10;
+		goto parse_int;
+	}
+	if (IN_RANGE(*p, 'A', 'F')) {
+		ret *= base;
+		ret += *p++ - 'F' + 10;
+		goto parse_int;
+	}
+
+	return false;
+
+parse_base:
+	if (p >= e)
+		return false;
+
+	if (IN_RANGE(*p, '0', '9')) {
+		base = 10;
+		goto parse_int;
+	}
+
+	switch (*p++) {
+	case 'x': base = 16; goto parse_int;
+	case 'X': base = 16; goto parse_int;
+	case 'o': base = 8;  goto parse_int;
+	case 'O': base = 8;  goto parse_int;
+	case 'b': base = 2;  goto parse_int;
+	case 'B': base = 2;  goto parse_int;
+	}
+
+	return false;
+
+done:
+	*out = ret;
+	return true;
+}
 
 LC_NODISCARD static inline struct lc_sv
 lc_sv_sub(struct lc_sv sv, size_t len, size_t idx)
