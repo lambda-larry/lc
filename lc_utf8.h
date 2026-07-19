@@ -95,7 +95,7 @@ lc_utf8_decode(size_t *restrict n, const char *restrict *restrict in, lc_rune *r
 			goto fail;
 		goto success;
 	}
-	if (IN_RANGE(*p, 0xF0, 0xF4)) {
+	if (IN_RANGE(*p, 0xF0, 0xF7)) {
 		cp = (cp << 6) | (0x07 & *p++);
 		if (0x80 != (0xC0 & *p)) goto fail;
 		cp = (cp << 6) | (0x3F & *p++);
