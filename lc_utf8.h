@@ -21,6 +21,20 @@ LC_UTF8_API bool lc_utf8_encode(lc_rune in, size_t *restrict out_n, char *restri
 #define IN_RANGE(X, LO, HI) (((LO) <= (X)) & ((X) <= (HI)))
 #endif
 
+#if defined(__GNUC__) && __GNUC__ && defined(__has_builtin) && __has_builtin(__builtin_expect)
+#define LC_UTF8_EXPECT(expr, cond) __builtin_expect(expr, cond)
+#else
+#define LC_UTF8_EXPECT(expr, cond) (expr)
+#define LC_UTF8_NO_ASSUME
+#endif
+
+#ifndef LC_UTF8_NO_ASSUME
+#define LC_UTF8_EXPECT(expr, cond) __builtin_expect(expr, cond)
+#else
+#define LC_UTF8_EXPECT(expr, cond) (expr)
+#endif
+
+
 LC_UTF8_API bool
 lc_utf8_decode(size_t *restrict n, const char *restrict *restrict in, lc_rune *restrict out)
 {
@@ -71,11 +85,61 @@ lc_utf8_decode(size_t *restrict n, const char *restrict *restrict in, lc_rune *r
 	/// 15 | 0x0F0000-0x0FFFFF | Supplementary Private Use Area-A (SPUA-A) | 1      | 0
 	/// 16 | 0x100000-0x10FFFF | Supplementary Private Use Area-B (SPUA-B) | 1      | 0
 
-	if (IN_RANGE(*p, 0x00, 0x7F)) {
+	/// PERF(larry): Performance optimization journal
+	///
+	/// I have tried the following with success:
+	/// - Loop unrolling
+	/// - Assume mostly ASCII input with `__builtin_expect`
+	/// - Assume unicode plane 1 and beyond is statisticly unlikely with
+	///   `__builtin_expect` (emoji and historical CJK)
+	/// - Minimize numbers of compare for each branch/range.
+	///       From:
+	///       // expands to (((0xC0) <= (*p)) & ((*p) <= (0xDF)))
+	///       // The condition depends on two compare
+	///       if (IN_RANGE(*p, 0xC0, 0xDF)) {
+	///           ...
+	///       }
+	///
+	///       To:
+	///       if (*p <= 0xBF) {
+	///           goto invalid;
+	///       }
+	///       if (*p <= 0xDF) { // Implied *p >= 0xC0
+	///           ...
+	///       }
+	///       if (*p <= 0xEF) { // Implied *p >= 0xE0
+	///           ...
+	///       }
+	///
+	///   While a compare is not a branch, it is still a data dependency
+	///   for the actual branch
+	///
+	/// - I _did_ try to write IN_RANGE as ((uint32_t)(X) - (LO) <= ((HI) - (LO))).
+	///   I opted for the minimize compare approach, as the macro is too
+	///   clever for my liking with no additional performance benefit.
+	///
+	/// I have tried the following with no success:
+	/// - Jump table with computed goto (indirect jump)
+	/// - Interleve the body of the unrolled loop with goto labels to
+	///   deduplicate code. Similar to duff's device
+	///
+	/// Future work:
+	/// - Macro to customize assumption
+	/// - Compare against GCC and other compilers
+	/// - Compare against text editors (vim and friends)
+	/// - Compare against ICU
+	/// - Handwrite the routine in assembly to compare
+	/// - Benchmark encoder
+	///
+
+	if (LC_UTF8_EXPECT(*p <= 0x7F, 1)) {
 		cp = (cp << 6) | (0x7F & *p++);
 		goto success;
 	}
-	if (IN_RANGE(*p, 0xC0, 0xDF)) {
+	if (/* 0x80 <= *p & */ *p <= 0xBF) {
+		goto invalid;
+	}
+	if (/* 0xC0 <= *p & */ *p <= 0xDF) {
 		cp = (cp << 6) | (0x1F & *p++);
 		if (0x80 != (0xC0 & *p)) goto fail;
 		cp = (cp << 6) | (0x3F & *p++);
@@ -84,7 +148,7 @@ lc_utf8_decode(size_t *restrict n, const char *restrict *restrict in, lc_rune *r
 			goto fail;
 		goto success;
 	}
-	if (IN_RANGE(*p, 0xE0, 0xEF)) {
+	if (/* 0xE0 <= *p & */ *p <= 0xEF) {
 		cp = (cp << 6) | (0x0F & *p++);
 		if (0x80 != (0xC0 & *p)) goto fail;
 		cp = (cp << 6) | (0x3F & *p++);
@@ -95,7 +159,7 @@ lc_utf8_decode(size_t *restrict n, const char *restrict *restrict in, lc_rune *r
 			goto fail;
 		goto success;
 	}
-	if (IN_RANGE(*p, 0xF0, 0xF7)) {
+	if (/* 0xF0 <= *p & */ LC_UTF8_EXPECT(*p <= 0xF7, 0)) {
 		cp = (cp << 6) | (0x07 & *p++);
 		if (0x80 != (0xC0 & *p)) goto fail;
 		cp = (cp << 6) | (0x3F & *p++);
@@ -109,6 +173,7 @@ lc_utf8_decode(size_t *restrict n, const char *restrict *restrict in, lc_rune *r
 		goto success;
 	}
 
+invalid:
 	p++;
 	goto fail;
 
