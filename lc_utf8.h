@@ -21,7 +21,8 @@ LC_UTF8_API bool lc_utf8_encode(lc_rune in, size_t *restrict out_n, char *restri
 #define IN_RANGE(X, LO, HI) (((LO) <= (X)) & ((X) <= (HI)))
 #endif
 
-LC_UTF8_API bool lc_utf8_decode(size_t *restrict n, const char *restrict *restrict in, lc_rune *restrict out)
+LC_UTF8_API bool
+lc_utf8_decode(size_t *restrict n, const char *restrict *restrict in, lc_rune *restrict out)
 {
 	enum
 	{
@@ -96,7 +97,8 @@ fail:
 }
 
 
-LC_UTF8_API bool lc_utf8_encode(lc_rune in, size_t *restrict out_n, char *restrict *restrict out)
+LC_UTF8_API bool
+lc_utf8_encode(lc_rune in, size_t *restrict out_n, char *restrict *restrict out)
 {
 	char *o = *out;
 
