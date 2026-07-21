@@ -264,6 +264,7 @@ escaped:
 	typedef u32 rune;
 	typedef u16 utf16;
 escaped_hex:
+	;
 
 	utf16 utf16_codepoint = 0;
 	for (u16 i = 0; i < 4; i++) {
@@ -508,9 +509,10 @@ parse_exponent_digit:
 	}
 
 done:
+	;
 
 	extern f32 strtof(const char *restrict str, char **restrict str_end);
-	*out = strtof(json->raw, nullptr);
+	*out = strtof(json->raw, NULL);
 	json->raw = p;
 
 	return true;
@@ -570,9 +572,10 @@ parse_exponent_digit:
 	}
 
 done:
+	;
 
 	extern f64 strtod(const char *restrict str, char **restrict str_end);
-	*out = strtod(json->raw, nullptr);
+	*out = strtod(json->raw, NULL);
 	json->raw = p;
 
 	return true;
@@ -656,6 +659,7 @@ escaped:
 	typedef u32 rune;
 	typedef u16 utf16;
 escaped_hex:
+	;
 
 	utf16 utf16_codepoint = 0;
 	for (u16 i = 0; i < 4; i++) {
@@ -768,16 +772,16 @@ lc_json_value_skip(struct lc_json *json, size_t n, char buffer[restrict n])
 {
 	if (lc_json_null(json))
 		return;
-	if (lc_json_bool(json, &(bool){}))
+	if (lc_json_bool(json, &(bool){0}))
 		return;
-	if (lc_json_f32(json,  &(f32){}))
+	if (lc_json_f32(json,  &(f32){0}))
 		return;
-	if (lc_json_string(json, n, buffer, &(size_t){}))
+	if (lc_json_string(json, n, buffer, &(size_t){0}))
 		return;
 	if (lc_json_obj_begin(json)) {
 		if (!lc_json_obj_end(json)) {
 			do {
-				if (lc_json_key(json, n, buffer, &(size_t){})) {
+				if (lc_json_key(json, n, buffer, &(size_t){0})) {
 					lc_json_value_skip(json, n, buffer);
 				}
 			} while (lc_json_comma(json));
