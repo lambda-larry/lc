@@ -13,7 +13,7 @@ library                      | category    | C Version | description
 [lc_deflate.h](lc_deflate.h) | Compression |       cXX | Deflate decompression routine
 [lc_utf8.h](lc_utf8.h)       | Encoding    |     >=c99 | UTF-8 decode/encode
 [lc_csv.h](lc_csv.h)         | Parser      |     >=c99 | **BYOB** csv parser
-[lc_ini.h](lc_ini.h)         | Parser      |       c99 | **BYOB** ini parser
+[lc_ini.h](lc_ini.h)         | Parser      |     >=c99 | **BYOB** ini parser
 [lc_json.h](lc_json.h)       | Parser      |   >=gnu99 | **BYOB** json parser
 [lc_rng.h](lc_rng.h)         | RNG         |       cXX |
 [lc_vfs.h](lc_vfs.h)         | Platform    |       cXX | Virtual filesystem interface
