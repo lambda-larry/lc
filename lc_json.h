@@ -72,6 +72,9 @@ struct lc_json {
 		}                                                                                            \
 	}
 
+#ifdef LC_IMPLEMENTATION
+#define _lc_json_in_range(x, lo, hi) (((uint32_t)(x) - (lo)) <= ((hi) - (lo)))
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Parser                                                          [LC_JSP] ///
@@ -268,16 +271,20 @@ escaped_hex:
 
 	utf16 utf16_codepoint = 0;
 	for (u16 i = 0; i < 4; i++) {
-		switch (*p) {
-		case '0' ... '9': utf16_codepoint <<= 4; utf16_codepoint += 00 + *p++ - '0'; continue;
-		case 'a' ... 'f': utf16_codepoint <<= 4; utf16_codepoint += 10 + *p++ - 'a'; continue;
-		case 'A' ... 'F': utf16_codepoint <<= 4; utf16_codepoint += 10 + *p++ - 'A'; continue;
-		default: return false;
+		if (_lc_json_in_range(*p, '0', '9')) {
+			utf16_codepoint <<= 4; utf16_codepoint += 00 + *p++ - '0'; continue;
 		}
+		if (_lc_json_in_range(*p, 'a', 'f')) {
+			utf16_codepoint <<= 4; utf16_codepoint += 10 + *p++ - 'a'; continue;
+		}
+		if (_lc_json_in_range(*p, 'A', 'F')) {
+			utf16_codepoint <<= 4; utf16_codepoint += 10 + *p++ - 'A'; continue;
+		}
+		return false;
 	}
 
 	rune code_point = 0;
-
+	goto utf16_decode;
 utf16_decode:
 	{
 		enum
@@ -291,37 +298,41 @@ utf16_decode:
 		const utf16 trail = 0xDC00      + (utf16_codepoint  & 0x3FF);
 
 		code_point = (lead << 10) + trail + SURROGATE_OFFSET;
+		goto utf8_encode;
 	}
 
 utf8_encode:
 	{
 		/// https://encoding.spec.whatwg.org/#utf-8-encoder
 
-		switch (code_point) {
-		case 0x000000 ... 0x000007F:
+		if (/* 0x000000 <= code_point & */ code_point <= 0x000007F) {
 			if (out + 0 >= end) return false;
 			*out++ = 0x00 | ((code_point >> 00) + 0x00);
 			goto parse;
-		case 0x000080 ... 0x00007FF:
+		}
+		if (/* 0x000080 <= code_point & */ code_point <= 0x00007FF) {
 			if (out + 1 >= end) return false;
 			*out++ = 0x00 | ((code_point >> 06) + 0xC0);
 			*out++ = 0x80 | ((code_point >> 00) & 0x3F);
 			goto parse;
-		case 0x000800 ... 0x000FFFF:
+		}
+		if (/* 0x000800 <= code_point & */ code_point <= 0x000FFFF) {
 			if (out + 2 >= end) return false;
 			*out++ = 0x00 | ((code_point >> 12) + 0xE0);
 			*out++ = 0x80 | ((code_point >> 06) & 0x3F);
 			*out++ = 0x80 | ((code_point >> 00) & 0x3F);
 			goto parse;
-		case 0x010000 ... 0x010FFFF:
+		}
+		if (/* 0x010000 <= code_point & */ code_point <= 0x010FFFF) {
 			if (out + 3 >= end) return false;
 			*out++ = 0x00 | ((code_point >> 18) + 0xF0);
 			*out++ = 0x80 | ((code_point >> 12) & 0x3F);
 			*out++ = 0x80 | ((code_point >> 06) & 0x3F);
 			*out++ = 0x80 | ((code_point >> 00) & 0x3F);
 			goto parse;
-		default: return false;
 		}
+
+		return false;
 	}
 
 done:
@@ -348,12 +359,19 @@ done:
 			p++;                                                                                 \
 		}                                                                                            \
                                                                                                              \
-		switch (*p) {                                                                                \
-		case '0' ... '0': acc *= 10; acc += *p++ - '0'; goto parse_zero;                             \
-		case '1' ... '9': acc *= 10; acc += *p++ - '0'; goto parse_digit;                            \
-		default: return false;                                                                       \
+		if (_lc_json_in_range(*p, '0', '0')) {                                                       \
+			acc  *= 10;                                                                          \
+			acc  += *p++ - '0';                                                                  \
+			goto parse_zero;                                                                     \
 		}                                                                                            \
                                                                                                              \
+		if (_lc_json_in_range(*p, '1', '9')) {                                                       \
+			acc  *= 10;                                                                          \
+			acc  += *p++ - '0';                                                                  \
+			goto parse_digit;                                                                    \
+		}                                                                                            \
+                                                                                                             \
+		return false;                                                                                \
 parse_zero:                                                                                                  \
 		switch (*p) {                                                                                \
 		case '.': p++; goto parse_fraction;                                                          \
@@ -363,8 +381,13 @@ parse_zero:                                                                     
 		}                                                                                            \
                                                                                                              \
 parse_digit:                                                                                                 \
+		if (_lc_json_in_range(*p, '0', '9')) {                                                       \
+			acc  *= 10;                                                                          \
+			acc  += *p++ - '0';                                                                  \
+			goto parse_digit;                                                                    \
+		}                                                                                            \
+                                                                                                             \
 		switch (*p) {                                                                                \
-		case '0' ... '9': acc *= 10; acc += *p++ - '0'; goto parse_digit;                            \
 		case '.': p++; goto parse_fraction;                                                          \
 		case 'e': p++; goto parse_exponent;                                                          \
 		case 'E': p++; goto parse_exponent;                                                          \
@@ -372,8 +395,14 @@ parse_digit:                                                                    
 		}                                                                                            \
                                                                                                              \
 parse_fraction:                                                                                              \
+		if (_lc_json_in_range(*p, '0', '9')) {                                                       \
+			frac *= 10;                                                                          \
+			frac += *p++ - '0';                                                                  \
+			fraction_len++;                                                                      \
+			goto parse_fraction;                                                                 \
+		}                                                                                            \
+                                                                                                             \
 		switch (*p) {                                                                                \
-		case '0' ... '9': frac *= 10; frac += *p++ - '0'; fraction_len++; goto parse_fraction;       \
 		case 'e': p++; goto parse_exponent;                                                          \
 		case 'E': p++; goto parse_exponent;                                                          \
 		default:  goto done;                                                                         \
@@ -395,14 +424,12 @@ parse_exponent:                                                                 
                                                                                                              \
                                                                                                              \
 parse_exponent_digit:                                                                                        \
-		switch (*p) {                                                                                \
-		case '0' ... '9':                                                                            \
+		if (_lc_json_in_range(*p, '0', '9')) {                                                       \
 			exponent *= 10;                                                                      \
 			exponent += *p++ - '0';                                                              \
 			goto parse_exponent_digit;                                                           \
-		default: goto done;                                                                          \
 		}                                                                                            \
-                                                                                                             \
+                goto done;                                                                                   \
 done:                                                                                                        \
                                                                                                              \
 		if (negative)                                                                                \
@@ -464,11 +491,10 @@ lc_json_f32(struct lc_json *json, f32 *out)
 		p++;
 	}
 
-	switch (*p) {
-	case '0' ... '0': p++; goto parse_zero;
-	case '1' ... '9': p++; goto parse_digit;
-	default: return false;
-	}
+	if (_lc_json_in_range(*p, '0', '0')) { p++; goto parse_zero; }
+	if (_lc_json_in_range(*p, '1', '9')) { p++; goto parse_digit; }
+
+	return false;
 
 parse_zero:
 	switch (*p) {
@@ -479,8 +505,9 @@ parse_zero:
 	}
 
 parse_digit:
+	if (_lc_json_in_range(*p, '0', '9')) { p++; goto parse_digit; }
+
 	switch (*p) {
-	case '0' ... '9': p++; goto parse_digit;
 	case '.':         p++; goto parse_fraction;
 	case 'e':         p++; goto parse_exponent;
 	case 'E':         p++; goto parse_exponent;
@@ -488,8 +515,9 @@ parse_digit:
 	}
 
 parse_fraction:
+	if (_lc_json_in_range(*p, '0', '9')) { p++; goto parse_fraction; }
+
 	switch (*p) {
-	case '0' ... '9': p++; goto parse_fraction;
 	case 'e':         p++; goto parse_exponent;
 	case 'E':         p++; goto parse_exponent;
 	default:          goto done;
@@ -503,11 +531,10 @@ parse_exponent:
 	}
 
 parse_exponent_digit:
-	switch (*p) {
-	case '0' ... '9': p++; goto parse_exponent_digit;
-	default:               goto done;
-	}
 
+	if (_lc_json_in_range(*p, '0', '9')) { p++; goto parse_exponent_digit; }
+
+	goto done;
 done:
 	;
 
@@ -527,11 +554,10 @@ lc_json_f64(struct lc_json *json, f64 *out)
 		p++;
 	}
 
-	switch (*p) {
-	case '0' ... '0': p++; goto parse_zero;
-	case '1' ... '9': p++; goto parse_digit;
-	default: return false;
-	}
+	if (_lc_json_in_range(*p, '0', '0')) { p++; goto parse_zero; }
+	if (_lc_json_in_range(*p, '1', '9')) { p++; goto parse_digit; }
+
+	return false;
 
 parse_zero:
 	switch (*p) {
@@ -542,8 +568,9 @@ parse_zero:
 	}
 
 parse_digit:
+	if (_lc_json_in_range(*p, '0', '9')) { p++; goto parse_digit; }
+
 	switch (*p) {
-	case '0' ... '9': p++; goto parse_digit;
 	case '.':         p++; goto parse_fraction;
 	case 'e':         p++; goto parse_exponent;
 	case 'E':         p++; goto parse_exponent;
@@ -551,8 +578,9 @@ parse_digit:
 	}
 
 parse_fraction:
+	if (_lc_json_in_range(*p, '0', '9')) { p++; goto parse_fraction; }
+
 	switch (*p) {
-	case '0' ... '9': p++; goto parse_fraction;
 	case 'e':         p++; goto parse_exponent;
 	case 'E':         p++; goto parse_exponent;
 	default:          goto done;
@@ -566,11 +594,9 @@ parse_exponent:
 	}
 
 parse_exponent_digit:
-	switch (*p) {
-	case '0' ... '9': p++; goto parse_exponent_digit;
-	default:               goto done;
-	}
+	if (_lc_json_in_range(*p, '0', '9')) { p++; goto parse_exponent_digit; }
 
+	goto done;
 done:
 	;
 
@@ -663,16 +689,21 @@ escaped_hex:
 
 	utf16 utf16_codepoint = 0;
 	for (u16 i = 0; i < 4; i++) {
-		switch (*p) {
-		case '0' ... '9': utf16_codepoint <<= 4; utf16_codepoint += 00 + *p++ - '0'; continue;
-		case 'a' ... 'f': utf16_codepoint <<= 4; utf16_codepoint += 10 + *p++ - 'a'; continue;
-		case 'A' ... 'F': utf16_codepoint <<= 4; utf16_codepoint += 10 + *p++ - 'A'; continue;
-		default: return false;
+		if (_lc_json_in_range(*p, '0', '9')) {
+			utf16_codepoint <<= 4; utf16_codepoint += 00 + *p++ - '0'; continue;
 		}
+		if (_lc_json_in_range(*p, 'a', 'f')) {
+			utf16_codepoint <<= 4; utf16_codepoint += 10 + *p++ - 'a'; continue;
+		}
+		if (_lc_json_in_range(*p, 'A', 'F')) {
+			utf16_codepoint <<= 4; utf16_codepoint += 10 + *p++ - 'A'; continue;
+		}
+
+		return false;
 	}
 
 	rune code_point = 0;
-
+	goto utf16_decode;
 utf16_decode:
 	{
 		enum
@@ -686,37 +717,44 @@ utf16_decode:
 		const utf16 trail = 0xDC00      + (utf16_codepoint  & 0x3FF);
 
 		code_point = (lead << 10) + trail + SURROGATE_OFFSET;
+		goto utf8_encode;
 	}
 
 utf8_encode:
 	{
 		/// https://encoding.spec.whatwg.org/#utf-8-encoder
 
-		switch (code_point) {
-		case 0x000000 ... 0x000007F:
+		if (/* 0x000000 <= code_point & */ code_point <= 0x000007F) {
 			if (s + 0 >= end) return false;
 			if ((char)(0x00 | ((code_point >> 00) + 0x00)) != *s++) return false;
 			goto parse;
-		case 0x000080 ... 0x00007FF:
+		}
+		if (/* 0x000080 <= code_point & */ code_point <= 0x00007FF) {
 			if (s + 1 >= end) return false;
 			if ((char)(0x00 | ((code_point >> 06) + 0xC0)) != *s++) return false;
 			if ((char)(0x80 | ((code_point >> 00) & 0x3F)) != *s++) return false;
 			goto parse;
-		case 0x000800 ... 0x000FFFF:
+		}
+		if (/* 0x000800 <= code_point & */ code_point <= 0x000FFFF) {
 			if (s + 2 >= end) return false;
 			if ((char)(0x00 | ((code_point >> 12) + 0xE0)) != *s++) return false;
 			if ((char)(0x80 | ((code_point >> 06) & 0x3F)) != *s++) return false;
 			if ((char)(0x80 | ((code_point >> 00) & 0x3F)) != *s++) return false;
 			goto parse;
-		case 0x010000 ... 0x010FFFF:
+		}
+		if (/* 0x010000 <= code_point & */ code_point <= 0x000FFFF) {
+			return false;
+		}
+		if (/* 0x010000 <= code_point & */ code_point <= 0x010FFFF) {
 			if (s + 3 >= end) return false;
 			if ((char)(0x00 | ((code_point >> 18) + 0xF0)) != *s++) return false;
 			if ((char)(0x80 | ((code_point >> 12) & 0x3F)) != *s++) return false;
 			if ((char)(0x80 | ((code_point >> 06) & 0x3F)) != *s++) return false;
 			if ((char)(0x80 | ((code_point >> 00) & 0x3F)) != *s++) return false;
 			goto parse;
-		default: return false;
 		}
+
+		return false;
 	}
 
 done_string:
