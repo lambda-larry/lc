@@ -114,7 +114,7 @@ static inline bool
 lc_vfs_is_root_(LC_ARGS_DECL, struct lc_vfs fs)
 {
 	struct lc_sv cwd = lc_vfs_cwd_(LC_ARGS_PASS, fs);
-	return 0 == strcmp(cwd.s, "/");
+	return 1 == cwd.length && '/' == cwd.s[0];
 }
 
 
