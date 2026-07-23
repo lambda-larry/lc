@@ -15,7 +15,7 @@ library                      | category    | C Version | description
 [lc_csv.h](lc_csv.h)         | Parser      |     >=c99 | **BYOB** csv parser
 [lc_ini.h](lc_ini.h)         | Parser      |     >=c99 | **BYOB** ini parser
 [lc_json.h](lc_json.h)       | Parser      |     >=c99 | **BYOB** json parser
-[lc_rng.h](lc_rng.h)         | RNG         |       cXX |
+[lc_rng.h](lc_rng.h)         | RNG         |     >=c99 | PCG32 random number generator
 [lc_vfs.h](lc_vfs.h)         | Platform    |     >=c11 | Virtual filesystem interface
 
 Zero allocation API design
