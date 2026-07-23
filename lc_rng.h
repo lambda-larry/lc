@@ -31,10 +31,10 @@ typedef double f64;
 
 struct lc_rng_pcg32_state { uint64_t state; uint64_t inc; };
 
-#define LC_RNG_PCG32_INITIALIZER                                                                             \
-	((struct lc_rng_pcg32_state){                                                                        \
-	        .state = UINT64_C(0x853C49E6748FEA9B),                                                          \
-	        .inc   = UINT64_C(0xDA3E39CB94B95BDB),                                                          \
+#define LC_RNG_PCG32_INITIALIZER                                                                   \
+	((struct lc_rng_pcg32_state){                                                              \
+	        .state = UINT64_C(0x853C49E6748FEA9B),                                             \
+	        .inc   = UINT64_C(0xDA3E39CB94B95BDB),                                             \
 	})
 
 
@@ -66,7 +66,7 @@ lc_pcg32_random_f32(struct lc_rng_pcg32_state *rng)
 		return 0;
 
 	extern f32 ldexpf(f32 arg, int exp);
-	return ldexpf((f32)(rand() | 0x80000001), -32 - __builtin_clz(proto_exp_offset));
+	return ldexpf((f32)(lc_pcg32_random(rng) | 0x80000001), -32 - __builtin_clz(proto_exp_offset));
 }
 
 #endif
