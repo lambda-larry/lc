@@ -17,6 +17,7 @@ library                      | category    | C Version | description
 [lc_json.h](lc_json.h)       | Parser      |     >=c99 | **BYOB** json parser
 [lc_rng.h](lc_rng.h)         | RNG         |     >=c99 | PCG32 random number generator
 [lc_vfs.h](lc_vfs.h)         | Platform    |     >=c11 | Virtual filesystem interface
+[lc_hash.h](lc_hash.h)       | Util        |     >=c99 | Hashing algorithm
 
 Zero allocation API design
 ==========================
