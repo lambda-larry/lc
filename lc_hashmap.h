@@ -149,10 +149,10 @@ typedef uint32_t _lc_hm_hash;
 static inline _lc_hm_hash
 _lc_hm_fnv1a_hash(size_t len, const char s[len])
 {
-	_lc_hm_hash hash = FNV1_PRIME;
+	_lc_hm_hash hash = FNV1_OFFSET;
 	for (int i = 0; i < len; i++) {
 		hash ^= (uint8_t)s[i];
-		hash *= FNV1_OFFSET;
+		hash *= FNV1_PRIME;
 	}
 	return hash;
 }
