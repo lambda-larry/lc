@@ -4539,7 +4539,7 @@ lc_base64_encode(size_t n, const u8 in[restrict n], size_t m, char out[restrict 
 	const u8 *in_end = in + n;
 
 	char *out_p   = (char *)out;
-	char *out_end = (char *)out + n;
+	char *out_end = (char *)out + m;
 
 	static const char decode_tbl[64] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
