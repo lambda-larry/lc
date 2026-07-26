@@ -18,6 +18,7 @@ library                      | category    | C Version | description
 [lc_rng.h](lc_rng.h)         | RNG         |     >=c99 | PCG32 random number generator
 [lc_vfs.h](lc_vfs.h)         | Platform    |     >=c11 | Virtual filesystem interface
 [lc_hash.h](lc_hash.h)       | Util        |     >=c99 | Hashing algorithm
+[lc_base64.h](lc_base64.h)   | Encoding    |     >=c99 | Base64 encoding/decoding
 
 Zero allocation API design
 ==========================

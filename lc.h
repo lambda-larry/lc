@@ -30,8 +30,7 @@
 /// - Dynamic library ..............................................34. [LC_XDL]
 /// - Bit stream ..................................................236. [LC_XBS]
 /// - Endian .......................................................91. [LC_XED]
-/// - Compression ..................................................11. [LC_XCM]
-/// - Base64 .......................................................78. [LC_XBC]
+/// - Compression ..................................................18. [LC_XCM]
 /// @lc_toc_end
 
 
@@ -4525,77 +4524,6 @@ typedef_be(i64);
 #include "lc_deflate.h"
 #endif
 #endif
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Base64                                                          [LC_XBC] ///
-////////////////////////////////////////////////////////////////////////////////
-
-static inline size_t
-lc_base64_encode(size_t n, const u8 in[restrict n], size_t m, char out[restrict m])
-{
-	struct msb_stream stream = {0};
-	const u8 *in_p   = in;
-	const u8 *in_end = in + n;
-
-	char *out_p   = (char *)out;
-	char *out_end = (char *)out + m;
-
-	static const char decode_tbl[64] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-	while (in_p < in_end && out_p < out_end) {
-		u32 idx = msb_stream_take_ptr_(LC_ARGS(NULL, lc_src_loc(0)), &stream, &in_p, 6);
-		*out_p++ = decode_tbl[idx];
-	}
-
-	return out_p - out;
-}
-
-static inline size_t
-lc_base64_decode(size_t n, const char in[restrict n], size_t m, u8 out[restrict m])
-{
-	u32 buffer    = 0;
-	u32 remaining = 0;
-
-	const char *in_p   = in;
-	const char *in_end = in + n;
-
-	u8 *out_p   = (u8 *)out;
-	u8 *out_end = (u8 *)out + m;
-
-	while (in_p < in_end && out_p < out_end) {
-		u8 bits = 0;
-
-		if (0) {
-		} else if (IN_RANGE(*in_p, 'A', 'Z')) {
-			bits = 00 + *in_p++ - 'A';
-		} else if (IN_RANGE(*in_p, 'a', 'z')) {
-			bits = 26 + *in_p++ - 'a';
-		} else if (IN_RANGE(*in_p, '0', '9')) {
-			bits = 52 + *in_p++ - '0';
-		} else switch (*in_p) {
-		case '+': bits = 62 + *in_p++ - '+'; break;
-		case '/': bits = 63 + *in_p++ - '/'; break;
-		case '=': bits = 00 + *in_p++ - '='; break;
-		default: lc_unreachable();
-		}
-
-		enum
-		{
-			MASK = (1 << 6) - 1,
-		};
-
-		buffer    <<= 6;
-		buffer     |= MASK & bits;
-		remaining  += 6;
-		if (remaining >= UINT8_WIDTH) {
-			remaining -= UINT8_WIDTH;
-			*out_p++   = buffer >> remaining;
-		}
-	}
-
-	return out_p - out;
-}
 
 #ifdef LC_STD_CXX
 };
