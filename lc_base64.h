@@ -13,10 +13,6 @@ extern void abort(void);
 #define LC_BASE64_UNREACHABLE() abort()
 #endif
 
-#ifndef UINT8_WIDTH
-#define UINT8_WIDTH 8
-#endif
-
 static inline size_t
 lc_base64_encode(size_t n, const uint8_t in[restrict n], size_t m, char out[restrict m])
 {
@@ -31,8 +27,9 @@ lc_base64_encode(size_t n, const uint8_t in[restrict n], size_t m, char out[rest
 
 	enum
 	{
+		UINT8_WIDTH = 8,
 		COUNT = 6,
-		MASK  = (UINT32_C(1) << COUNT) - 1,
+		MASK  = (1 << COUNT) - 1,
 	};
 	static const char decode_tbl[64] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -44,7 +41,7 @@ lc_base64_encode(size_t n, const uint8_t in[restrict n], size_t m, char out[rest
 		}
 
 		remaining -= COUNT;
-		const uint32_t idx  = (buffer >> remaining) & MASK;
+		const uint32_t idx = (buffer >> remaining) & MASK;
 
 		*out_p++ = decode_tbl[idx];
 	}
@@ -94,6 +91,7 @@ lc_base64_decode(size_t n, const char in[restrict n], size_t m, uint8_t out[rest
 
 		enum
 		{
+			UINT8_WIDTH = 8,
 			COUNT = 6,
 			MASK  = (1 << COUNT) - 1,
 		};
