@@ -264,47 +264,27 @@ escaped:
 	case 'u':  p++; goto escaped_hex;
 	}
 
-	typedef u32 rune;
-	typedef u16 utf16;
 escaped_hex:
-	;
-
-	utf16 utf16_codepoint = 0;
-	for (u16 i = 0; i < 4; i++) {
-		if (_lc_json_in_range(*p, '0', '9')) {
-			utf16_codepoint <<= 4; utf16_codepoint += 00 + *p++ - '0'; continue;
-		}
-		if (_lc_json_in_range(*p, 'a', 'f')) {
-			utf16_codepoint <<= 4; utf16_codepoint += 10 + *p++ - 'a'; continue;
-		}
-		if (_lc_json_in_range(*p, 'A', 'F')) {
-			utf16_codepoint <<= 4; utf16_codepoint += 10 + *p++ - 'A'; continue;
-		}
-		return false;
-	}
-
-	rune code_point = 0;
-	goto utf16_decode;
-utf16_decode:
+	/// https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf
 	{
-		enum
-		{
-			LEAD_OFFSET      = 0x0D800 - (0x10000 >> 10),
-			SURROGATE_OFFSET = 0x10000 - (0x0D800 << 10) - 0x0DC00,
-		};
+		typedef u32 rune;
+		rune code_point = 0;
+		for (u16 i = 0; i < 4; i++) {
+			if (_lc_json_in_range(*p, '0', '9')) {
+				code_point <<= 4; code_point += 00 + *p++ - '0'; continue;
+			}
+			if (_lc_json_in_range(*p, 'a', 'f')) {
+				code_point <<= 4; code_point += 10 + *p++ - 'a'; continue;
+			}
+			if (_lc_json_in_range(*p, 'A', 'F')) {
+				code_point <<= 4; code_point += 10 + *p++ - 'A'; continue;
+			}
+			return false;
+		}
 
-		// computations
-		const utf16 lead  = LEAD_OFFSET + (utf16_codepoint >> 10);
-		const utf16 trail = 0xDC00      + (utf16_codepoint  & 0x3FF);
-
-		code_point = (lead << 10) + trail + SURROGATE_OFFSET;
 		goto utf8_encode;
-	}
-
 utf8_encode:
-	{
 		/// https://encoding.spec.whatwg.org/#utf-8-encoder
-
 		if (/* 0x000000 <= code_point & */ code_point <= 0x000007F) {
 			if (out + 0 >= end) return false;
 			*out++ = 0x00 | ((code_point >> 00) + 0x00);
@@ -682,48 +662,29 @@ escaped:
 	case 'u':  p++; goto escaped_hex;
 	}
 
-	typedef u32 rune;
-	typedef u16 utf16;
 escaped_hex:
-	;
-
-	utf16 utf16_codepoint = 0;
-	for (u16 i = 0; i < 4; i++) {
-		if (_lc_json_in_range(*p, '0', '9')) {
-			utf16_codepoint <<= 4; utf16_codepoint += 00 + *p++ - '0'; continue;
-		}
-		if (_lc_json_in_range(*p, 'a', 'f')) {
-			utf16_codepoint <<= 4; utf16_codepoint += 10 + *p++ - 'a'; continue;
-		}
-		if (_lc_json_in_range(*p, 'A', 'F')) {
-			utf16_codepoint <<= 4; utf16_codepoint += 10 + *p++ - 'A'; continue;
-		}
-
-		return false;
-	}
-
-	rune code_point = 0;
-	goto utf16_decode;
-utf16_decode:
+	/// https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf
 	{
-		enum
-		{
-			LEAD_OFFSET      = 0x0D800 - (0x10000 >> 10),
-			SURROGATE_OFFSET = 0x10000 - (0x0D800 << 10) - 0x0DC00,
-		};
+		typedef u32 rune;
+		rune code_point = 0;
+		for (u16 i = 0; i < 4; i++) {
+			if (_lc_json_in_range(*p, '0', '9')) {
+				code_point <<= 4; code_point += 00 + *p++ - '0'; continue;
+			}
+			if (_lc_json_in_range(*p, 'a', 'f')) {
+				code_point <<= 4; code_point += 10 + *p++ - 'a'; continue;
+			}
+			if (_lc_json_in_range(*p, 'A', 'F')) {
+				code_point <<= 4; code_point += 10 + *p++ - 'A'; continue;
+			}
 
-		// computations
-		const utf16 lead  = LEAD_OFFSET + (utf16_codepoint >> 10);
-		const utf16 trail = 0xDC00      + (utf16_codepoint  & 0x3FF);
+			return false;
+		}
 
-		code_point = (lead << 10) + trail + SURROGATE_OFFSET;
+
 		goto utf8_encode;
-	}
-
 utf8_encode:
-	{
 		/// https://encoding.spec.whatwg.org/#utf-8-encoder
-
 		if (/* 0x000000 <= code_point & */ code_point <= 0x000007F) {
 			if (s + 0 >= end) return false;
 			if ((char)(0x00 | ((code_point >> 00) + 0x00)) != *s++) return false;
