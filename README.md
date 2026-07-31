@@ -19,6 +19,7 @@ library                      | category    | C Version | description
 [lc_vfs.h](lc_vfs.h)         | Platform    |     >=c11 | Virtual filesystem interface
 [lc_hash.h](lc_hash.h)       | Util        |     >=c99 | Hashing algorithm
 [lc_base64.h](lc_base64.h)   | Encoding    |     >=c99 | Base64 encoding/decoding
+[lc_lex_c.h](lc_lex_c.h)     | Lexer       |   >=gnu99 | C lexer
 
 Zero allocation API design
 ==========================
