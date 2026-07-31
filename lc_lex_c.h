@@ -1,6 +1,12 @@
 #ifndef LC_LEX_C_H
 #define LC_LEX_C_H
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-label"
+#endif
+
+#include <stdbool.h>
 #include <stdint.h>
 
 #ifndef LC_HAVE_SV
@@ -318,64 +324,65 @@ next_ident:
 	}
 
 kw_done:
-
+	;
 
 	static const struct {
 		enum lc_c_token_type type;
 		struct lc_sv content;
 	} keywords[] = {
-		{.type = TOK_KW_ALIGNAS,       .content = sv_c("_Alignas")},
-		{.type = TOK_KW_ALIGNAS,       .content = sv_c("alignas")},
-		{.type = TOK_KW_ALIGNOF,       .content = sv_c("_Alignof")},
-		{.type = TOK_KW_ALIGNOF,       .content = sv_c("alignof")},
-		{.type = TOK_KW_ASM,           .content = sv_c("__asm__")},
-		{.type = TOK_KW_ASM,           .content = sv_c("asm")},
-		{.type = TOK_KW_ATOMIC,        .content = sv_c("_Atomic")},
-		{.type = TOK_KW_ATTRIBUTE,     .content = sv_c("__attribute__")},
-		{.type = TOK_KW_AUTO,          .content = sv_c("auto")},
-		{.type = TOK_KW_BITINT,        .content = sv_c("_BitInt")},
-		{.type = TOK_KW_BREAK,         .content = sv_c("break")},
-		{.type = TOK_KW_CASE,          .content = sv_c("case")},
-		{.type = TOK_KW_CONST,         .content = sv_c("const")},
-		{.type = TOK_KW_CONSTEXPR,     .content = sv_c("constexpr")},
-		{.type = TOK_KW_CONTINUE,      .content = sv_c("continue")},
-		{.type = TOK_KW_DEFAULT,       .content = sv_c("default")},
-		{.type = TOK_KW_DO,            .content = sv_c("do")},
-		{.type = TOK_KW_ELSE,          .content = sv_c("else")},
-		{.type = TOK_KW_ENUM,          .content = sv_c("enum")},
-		{.type = TOK_KW_EXTERN,        .content = sv_c("extern")},
-		{.type = TOK_KW_FALSE,         .content = sv_c("false")},
-		{.type = TOK_KW_FOR,           .content = sv_c("for")},
-		{.type = TOK_KW_GENERIC,       .content = sv_c("_Generic")},
-		{.type = TOK_KW_GOTO,          .content = sv_c("goto")},
-		{.type = TOK_KW_IF,            .content = sv_c("if")},
-		{.type = TOK_KW_IMAGINARY,     .content = sv_c("_Imaginary")},
-		{.type = TOK_KW_INLINE,        .content = sv_c("inline")},
-		{.type = TOK_KW_NORETURN,      .content = sv_c("_Noreturn")},
-		{.type = TOK_KW_NULLPTR,       .content = sv_c("nullptr")},
-		{.type = TOK_KW_REGISTER,      .content = sv_c("register")},
-		{.type = TOK_KW_RESTRICT,      .content = sv_c("restrict")},
-		{.type = TOK_KW_RESTRICT,      .content = sv_c("__restrict")},
-		{.type = TOK_KW_RETURN,        .content = sv_c("return")},
-		{.type = TOK_KW_SIZEOF,        .content = sv_c("sizeof")},
-		{.type = TOK_KW_STATIC,        .content = sv_c("static")},
-		{.type = TOK_KW_STATIC_ASSERT, .content = sv_c("_Static_assert")},
-		{.type = TOK_KW_STATIC_ASSERT, .content = sv_c("static_assert")},
-		{.type = TOK_KW_STRUCT,        .content = sv_c("struct")},
-		{.type = TOK_KW_SWITCH,        .content = sv_c("switch")},
-		{.type = TOK_KW_THREAD_LOCAL,  .content = sv_c("_Thread_local")},
-		{.type = TOK_KW_THREAD_LOCAL,  .content = sv_c("thread_local")},
-		{.type = TOK_KW_TRUE,          .content = sv_c("true")},
-		{.type = TOK_KW_TYPEDEF,       .content = sv_c("typedef")},
-		{.type = TOK_KW_TYPEOF,        .content = sv_c("typeof")},
-		{.type = TOK_KW_TYPEOF,        .content = sv_c("__typeof__")},
-		{.type = TOK_KW_TYPEOF_UNQUAL, .content = sv_c("typeof_unqual")},
-		{.type = TOK_KW_UNION,         .content = sv_c("union")},
-		{.type = TOK_KW_VOLATILE,      .content = sv_c("volatile")},
-		{.type = TOK_KW_WHILE,         .content = sv_c("while")},
+#define lc_lex_c_kw_map(k, v) { .type = (k), .content.s = (v), .content.length = LEN(v) - 1, }
+		lc_lex_c_kw_map(TOK_KW_ALIGNAS,       "_Alignas"),
+		lc_lex_c_kw_map(TOK_KW_ALIGNAS,       "alignas"),
+		lc_lex_c_kw_map(TOK_KW_ALIGNOF,       "_Alignof"),
+		lc_lex_c_kw_map(TOK_KW_ALIGNOF,       "alignof"),
+		lc_lex_c_kw_map(TOK_KW_ASM,           "__asm__"),
+		lc_lex_c_kw_map(TOK_KW_ASM,           "asm"),
+		lc_lex_c_kw_map(TOK_KW_ATOMIC,        "_Atomic"),
+		lc_lex_c_kw_map(TOK_KW_ATTRIBUTE,     "__attribute__"),
+		lc_lex_c_kw_map(TOK_KW_AUTO,          "auto"),
+		lc_lex_c_kw_map(TOK_KW_BITINT,        "_BitInt"),
+		lc_lex_c_kw_map(TOK_KW_BREAK,         "break"),
+		lc_lex_c_kw_map(TOK_KW_CASE,          "case"),
+		lc_lex_c_kw_map(TOK_KW_CONST,         "const"),
+		lc_lex_c_kw_map(TOK_KW_CONSTEXPR,     "constexpr"),
+		lc_lex_c_kw_map(TOK_KW_CONTINUE,      "continue"),
+		lc_lex_c_kw_map(TOK_KW_DEFAULT,       "default"),
+		lc_lex_c_kw_map(TOK_KW_DO,            "do"),
+		lc_lex_c_kw_map(TOK_KW_ELSE,          "else"),
+		lc_lex_c_kw_map(TOK_KW_ENUM,          "enum"),
+		lc_lex_c_kw_map(TOK_KW_EXTERN,        "extern"),
+		lc_lex_c_kw_map(TOK_KW_FALSE,         "false"),
+		lc_lex_c_kw_map(TOK_KW_FOR,           "for"),
+		lc_lex_c_kw_map(TOK_KW_GENERIC,       "_Generic"),
+		lc_lex_c_kw_map(TOK_KW_GOTO,          "goto"),
+		lc_lex_c_kw_map(TOK_KW_IF,            "if"),
+		lc_lex_c_kw_map(TOK_KW_IMAGINARY,     "_Imaginary"),
+		lc_lex_c_kw_map(TOK_KW_INLINE,        "inline"),
+		lc_lex_c_kw_map(TOK_KW_NORETURN,      "_Noreturn"),
+		lc_lex_c_kw_map(TOK_KW_NULLPTR,       "nullptr"),
+		lc_lex_c_kw_map(TOK_KW_REGISTER,      "register"),
+		lc_lex_c_kw_map(TOK_KW_RESTRICT,      "restrict"),
+		lc_lex_c_kw_map(TOK_KW_RESTRICT,      "__restrict"),
+		lc_lex_c_kw_map(TOK_KW_RETURN,        "return"),
+		lc_lex_c_kw_map(TOK_KW_SIZEOF,        "sizeof"),
+		lc_lex_c_kw_map(TOK_KW_STATIC,        "static"),
+		lc_lex_c_kw_map(TOK_KW_STATIC_ASSERT, "_Static_assert"),
+		lc_lex_c_kw_map(TOK_KW_STATIC_ASSERT, "static_assert"),
+		lc_lex_c_kw_map(TOK_KW_STRUCT,        "struct"),
+		lc_lex_c_kw_map(TOK_KW_SWITCH,        "switch"),
+		lc_lex_c_kw_map(TOK_KW_THREAD_LOCAL,  "_Thread_local"),
+		lc_lex_c_kw_map(TOK_KW_THREAD_LOCAL,  "thread_local"),
+		lc_lex_c_kw_map(TOK_KW_TRUE,          "true"),
+		lc_lex_c_kw_map(TOK_KW_TYPEDEF,       "typedef"),
+		lc_lex_c_kw_map(TOK_KW_TYPEOF,        "typeof"),
+		lc_lex_c_kw_map(TOK_KW_TYPEOF,        "__typeof__"),
+		lc_lex_c_kw_map(TOK_KW_TYPEOF_UNQUAL, "typeof_unqual"),
+		lc_lex_c_kw_map(TOK_KW_UNION,         "union"),
+		lc_lex_c_kw_map(TOK_KW_VOLATILE,      "volatile"),
+		lc_lex_c_kw_map(TOK_KW_WHILE,         "while"),
 	};
 
-	struct lc_sv tok = {};
+	struct lc_sv tok = {0};
 	tok.s        = ls->buffer.s + ls->byte_offset;
 	tok.length   = stream->s - tok.s;
 
@@ -828,6 +835,7 @@ extern bool
 lc_lex_c_token(struct lc_c_lexer *ls, struct lc_c_token *token)
 {
 lex_begin:
+	;
 	struct lc_sv *stream = &(struct lc_sv){
 		.s      = ls->buffer.s      + ls->byte_offset,
 		.length = ls->buffer.length - ls->byte_offset,
@@ -911,49 +919,50 @@ lex_punct:
 			enum lc_c_token_type type;
 			struct lc_sv content;
 		} puncts[] = {
-			{.type = TOK_ELIPSE,    .content = sv_c("...")},
-			{.type = TOK_QMARK,     .content = sv_c("?")},
-			{.type = TOK_SCOPE,     .content = sv_c("::")},
-			{.type = TOK_COLON,     .content = sv_c(":")},
-			{.type = TOK_SEMICOLON, .content = sv_c(";")},
-			{.type = TOK_ARROW,     .content = sv_c("->")},
-			{.type = TOK_DOT,       .content = sv_c(".")},
-			{.type = TOK_COMMA,     .content = sv_c(",")},
-			{.type = TOK_LBRACE,    .content = sv_c("{")},
-			{.type = TOK_RBRACE,    .content = sv_c("}")},
-			{.type = TOK_LBRACK,    .content = sv_c("[")},
-			{.type = TOK_RBRACK,    .content = sv_c("]")},
-			{.type = TOK_LPAREN,    .content = sv_c("(")},
-			{.type = TOK_RPAREN,    .content = sv_c(")")},
-			{.type = TOK_NEQ,       .content = sv_c("!=")},
-			{.type = TOK_EQ,        .content = sv_c("==")},
-			{.type = TOK_LE,        .content = sv_c("<=")},
-			{.type = TOK_GE,        .content = sv_c(">=")},
-			{.type = TOK_LT,        .content = sv_c("<")},
-			{.type = TOK_GT,        .content = sv_c(">")},
-			{.type = TOK_ADD,       .content = sv_c("+")},
-			{.type = TOK_SUB,       .content = sv_c("-")},
-			{.type = TOK_MUL,       .content = sv_c("*")},
-			{.type = TOK_DIV,       .content = sv_c("/")},
-			{.type = TOK_MOD,       .content = sv_c("%")},
-			{.type = TOK_ASS,       .content = sv_c("=")},
-			{.type = TOK_BANG,      .content = sv_c("!")},
-			{.type = TOK_AMP,       .content = sv_c("&")},
-			{.type = TOK_CMOD,      .content = sv_c("%=")},
-			{.type = TOK_AND,       .content = sv_c("&&")},
-			{.type = TOK_CAND,      .content = sv_c("&=")},
-			{.type = TOK_CMUL,      .content = sv_c("*=")},
-			{.type = TOK_INC,       .content = sv_c("++")},
-			{.type = TOK_CADD,      .content = sv_c("+=")},
-			{.type = TOK_DEC,       .content = sv_c("--")},
-			{.type = TOK_CSUB,      .content = sv_c("-=")},
-			{.type = TOK_CDIV,      .content = sv_c("/=")},
-			{.type = TOK_XOR,       .content = sv_c("^")},
-			{.type = TOK_CXOR,      .content = sv_c("^=")},
-			{.type = TOK_BOR,       .content = sv_c("|")},
-			{.type = TOK_COR,       .content = sv_c("|=")},
-			{.type = TOK_OR,        .content = sv_c("||")},
-			{.type = TOK_BNOT,      .content = sv_c("~")},
+#define lc_lex_c_puncts_map(k, v) { .type = (k), .content.s = (v), .content.length = LEN(v) - 1, }
+			lc_lex_c_puncts_map(TOK_ELIPSE,    "..."),
+			lc_lex_c_puncts_map(TOK_QMARK,     "?"),
+			lc_lex_c_puncts_map(TOK_SCOPE,     "::"),
+			lc_lex_c_puncts_map(TOK_COLON,     ":"),
+			lc_lex_c_puncts_map(TOK_SEMICOLON, ";"),
+			lc_lex_c_puncts_map(TOK_ARROW,     "->"),
+			lc_lex_c_puncts_map(TOK_DOT,       "."),
+			lc_lex_c_puncts_map(TOK_COMMA,     ","),
+			lc_lex_c_puncts_map(TOK_LBRACE,    "{"),
+			lc_lex_c_puncts_map(TOK_RBRACE,    "}"),
+			lc_lex_c_puncts_map(TOK_LBRACK,    "["),
+			lc_lex_c_puncts_map(TOK_RBRACK,    "]"),
+			lc_lex_c_puncts_map(TOK_LPAREN,    "("),
+			lc_lex_c_puncts_map(TOK_RPAREN,    ")"),
+			lc_lex_c_puncts_map(TOK_NEQ,       "!="),
+			lc_lex_c_puncts_map(TOK_EQ,        "=="),
+			lc_lex_c_puncts_map(TOK_LE,        "<="),
+			lc_lex_c_puncts_map(TOK_GE,        ">="),
+			lc_lex_c_puncts_map(TOK_LT,        "<"),
+			lc_lex_c_puncts_map(TOK_GT,        ">"),
+			lc_lex_c_puncts_map(TOK_ADD,       "+"),
+			lc_lex_c_puncts_map(TOK_SUB,       "-"),
+			lc_lex_c_puncts_map(TOK_MUL,       "*"),
+			lc_lex_c_puncts_map(TOK_DIV,       "/"),
+			lc_lex_c_puncts_map(TOK_MOD,       "%"),
+			lc_lex_c_puncts_map(TOK_ASS,       "="),
+			lc_lex_c_puncts_map(TOK_BANG,      "!"),
+			lc_lex_c_puncts_map(TOK_AMP,       "&"),
+			lc_lex_c_puncts_map(TOK_CMOD,      "%="),
+			lc_lex_c_puncts_map(TOK_AND,       "&&"),
+			lc_lex_c_puncts_map(TOK_CAND,      "&="),
+			lc_lex_c_puncts_map(TOK_CMUL,      "*="),
+			lc_lex_c_puncts_map(TOK_INC,       "++"),
+			lc_lex_c_puncts_map(TOK_CADD,      "+="),
+			lc_lex_c_puncts_map(TOK_DEC,       "--"),
+			lc_lex_c_puncts_map(TOK_CSUB,      "-="),
+			lc_lex_c_puncts_map(TOK_CDIV,      "/="),
+			lc_lex_c_puncts_map(TOK_XOR,       "^"),
+			lc_lex_c_puncts_map(TOK_CXOR,      "^="),
+			lc_lex_c_puncts_map(TOK_BOR,       "|"),
+			lc_lex_c_puncts_map(TOK_COR,       "|="),
+			lc_lex_c_puncts_map(TOK_OR,        "||"),
+			lc_lex_c_puncts_map(TOK_BNOT,      "~"),
 		};
 
 		size_t longest     = 0;
@@ -996,5 +1005,8 @@ done:
 	return true;
 }
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#endif
 
 #endif
