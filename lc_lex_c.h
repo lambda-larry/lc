@@ -227,9 +227,9 @@ lc_token_type_str(enum lc_c_token_type type)
 
 struct lc_c_source_location {
 	struct lc_sv filename;
-	uint32_t           line_no;
-	uint32_t           column_no;
-	const char         *line_begin;
+	uint32_t     line_no;
+	uint32_t     column_no;
+	uint32_t     line_begin;
 };
 
 struct lc_c_token {
@@ -395,7 +395,7 @@ kw_done:
 			.loc.filename   = ls->filename,
 			.loc.line_no    = ls->line_no,
 			.loc.column_no  = ls->column_no,
-			// .loc.line_begin = stream_->s - (ls->column_no - 1),
+			.loc.line_begin = ls->byte_offset - ls->column_no + 1,
 			.value          = tok,
 		};
 		ls->column_no += token->value.length;
@@ -412,7 +412,7 @@ ident_done:
 		.loc.filename   = ls->filename,
 		.loc.line_no    = ls->line_no,
 		.loc.column_no  = ls->column_no,
-		// .loc.line_begin = stream_->s - (ls->column_no - 1),
+		.loc.line_begin = ls->byte_offset - ls->column_no + 1,
 		.value          = tok,
 	};
 	ls->column_no += token->value.length;
@@ -543,7 +543,7 @@ parse_done:
 		.loc.filename   = ls->filename,
 		.loc.line_no    = ls->line_no,
 		.loc.column_no  = ls->column_no,
-		// .loc.line_begin = stream_->s - (ls->column_no - 1),
+		.loc.line_begin = ls->byte_offset - ls->column_no + 1,
 		.value.s        = ls->buffer.s + ls->byte_offset + 2,
 		.value.length   = stream->s - (ls->buffer.s + ls->byte_offset) - 2,
 	};
@@ -668,12 +668,12 @@ parse_done:
 		.loc.filename   = ls->filename,
 		.loc.line_no    = ls->line_no,
 		.loc.column_no  = ls->column_no,
-		// .loc.line_begin = stream_->s - (ls->column_no - 1),
+		.loc.line_begin = ls->byte_offset - ls->column_no + 1,
 		.value.s        = ls->buffer.s + ls->byte_offset + 1,
 		.value.length   = stream->s - (ls->buffer.s + ls->byte_offset) - 2,
 	};
 	ls->column_no  += token->value.length + 2;
-	ls->byte_offset = token->value.s + token->value.length - ls->buffer.s + 2;
+	ls->byte_offset = token->value.s + token->value.length - ls->buffer.s + 1;
 
 	return true;
 }
@@ -756,7 +756,7 @@ done:
 		.loc.filename   = ls->filename,
 		.loc.line_no    = ls->line_no,
 		.loc.column_no  = ls->column_no,
-		// .loc.line_begin = stream_->s - (ls->column_no - 1),
+		.loc.line_begin = ls->byte_offset - ls->column_no + 1,
 		.value.s        = ls->buffer.s + ls->byte_offset,
 		.value.length   = stream->s - (ls->buffer.s + ls->byte_offset),
 	};
@@ -986,7 +986,7 @@ lex_punct:
 				.loc.filename   = ls->filename,
 				.loc.line_no    = ls->line_no,
 				.loc.column_no  = ls->column_no,
-				.loc.line_begin = stream->s - (ls->column_no - 1),
+				.loc.line_begin = ls->byte_offset - ls->column_no + 1,
 				.value.s        = stream->s,
 				.value.length   = puncts[longest_idx].content.length,
 			};
