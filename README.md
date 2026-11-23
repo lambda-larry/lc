@@ -9,6 +9,7 @@ Overview
 library                      | category    | C Version | description
 ---------------------------- | ----------- | --------- | -----------
 [lc.h](lc.h)                 | Core        |     >=c23 | Monolith library inspired by odin lang, contains everything
+[lc_da.h](lc_da.h)           | Core        |     >=c99 | Embedable dynamic array
 [lc_hashmap.h](lc_hashmap.h) | Core        |     >=c99 | Open addressing hashmap
 [lc_deflate.h](lc_deflate.h) | Compression |     >=c23 | Deflate decompression routine
 [lc_utf8.h](lc_utf8.h)       | Encoding    |     >=c99 | UTF-8 decode/encode
